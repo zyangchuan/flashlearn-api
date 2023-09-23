@@ -1,12 +1,18 @@
 const { User, Token } = require('../models');
 const { attachCookies, sendVerificationEmail, sendPasswordResetEmail } = require('../utils');
 const { literal } = require('sequelize');
+const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, UnauthenticatedError } = require('../errors');
 
 const register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+  }
+
   const { email, username } = req.body;
 
   // Check if email exists
@@ -132,6 +138,11 @@ const resetPassword = async (req, res) => {
 }
 
 const changePassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+  }
+
   const { email, password, passwordToken } = req.body;
   const user = await User.findOne({ where: { email: email } });
   if (!user) {
@@ -158,6 +169,11 @@ const changePassword = async (req, res) => {
 }
 
 const changeUsername = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+  }
+
   const { username } = req.body;
   const user = await User.findOne({ where: { id: req.user.userId } });
 
