@@ -12,7 +12,7 @@ const {
 } = require('../controllers/authController');
 
 const authenticateUser = require('../middlewares/authentication');
-const { emailSchema, usernameSchema, passwordSchema } = require('../middlewares/schemas');
+const { emailSchema, usernameSchema, passwordSchema } = require('../utils/schemas');
 const { checkSchema } = require('express-validator');
 
 router.post('/register', checkSchema({ 

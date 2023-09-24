@@ -4,14 +4,8 @@ services:
       db: 
         condition: service_healthy
     container_name: flashlearn_api
-    environment:
-      - MYSQL_DATABASE_HOST=db
-      - MYSQL_DATABASE_USER=root
-      - MYSQL_ROOT_PASSWORD=flashlearn2023
-      - MYSQL_DATABASE=flashlearn_db
-      - JWT_SECRET=2KbLGa8AZufSxfKtQbUctsaPkwiOXOyDyHncYDF31XElst1+KfUrVHPuClo9kybG
-      - SMTP_USERNAME=AKIA5WTBH364OWBX7SBA
-      - SMTP_PASSWORD=BNq6koTDjoDuI5oTdMEjaArPmgZJx9a50vczZomRIZId
+    env_file:
+      - .env
     build: ./api
     ports:
       - "5001:5001"
@@ -21,9 +15,8 @@ services:
   db:
     image: mysql
     container_name: flashlearn_db
-    environment:
-      - MYSQL_ROOT_PASSWORD=flashlearn2023
-      - MYSQL_DATABASE=flashlearn_db
+    env_file:
+      - .env
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pflashlearn2023"]
       interval: 5s

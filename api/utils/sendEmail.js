@@ -23,7 +23,8 @@ const sendVerificationEmail = async (email, token) => {
       subject: "Verify Your Email",
       text: 
         "Welcome to FlashLearn! Click on the link to verify your email: " + 
-        `http://www.localhost:3000/verify-email?email=${email}&verificationToken=${token}`,
+        process.env.NODE_ENV==='production' ? 'https://www.flashlearn.io' : 'http://www.localhost:3000' +
+        `/verify-email?email=${email}&verificationToken=${token}`,
     }
   );
 }
@@ -38,8 +39,9 @@ const sendPasswordResetEmail = async (email, token) => {
       to: email,
       subject: "Reset Your Password",
       text:
-        "Click on the link to reset your password: " + 
-        `http://www.localhost:3000/reset-password?email=${email}&passwordToken=${token}`,
+        "Click on the link to reset your password: " +
+        process.env.NODE_ENV==='production' ? 'https://www.flashlearn.io' : 'http://www.localhost:3000' +
+        `/reset-password?email=${email}&passwordToken=${token}`,
     }
   );
 }
