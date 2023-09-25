@@ -20,7 +20,7 @@ const sendVerificationEmail = async (email, token) => {
         address: "verification@flashlearn.io"
       },
       to: email,
-      subject: "Verify Your Email",
+      subject: "Verify your email",
       text: 
         "Welcome to FlashLearn! Click on the link to verify your email: " + 
         process.env.NODE_ENV==='production' ? 'https://www.flashlearn.io' : 'http://www.localhost:3000' +
@@ -37,7 +37,7 @@ const sendPasswordResetEmail = async (email, token) => {
         address: "reset-password@flashlearn.io"
       },
       to: email,
-      subject: "Reset Your Password",
+      subject: "Reset your password",
       text:
         "Click on the link to reset your password: " +
         process.env.NODE_ENV==='production' ? 'https://www.flashlearn.io' : 'http://www.localhost:3000' +
