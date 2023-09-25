@@ -104,20 +104,55 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   const { refreshToken } = req.signedCookies;
-  // Revoke refresh token in database
-  await Token.destroy({ where: { refresh_token: refreshToken } });
 
-  // Expire cookies in the client's browser
-  res.cookie('accessToken', 'logout', {
-    httpOnly: true,
-    expires: new Date(Date.now()),
-  });
-  res.cookie('refreshToken', 'logout', {
-    httpOnly: true,
-    expires: new Date(Date.now()),
-  });
+  if (refreshToken) {
+    // Revoke refresh token in database
+    await Token.destroy({ where: { refresh_token: refreshToken } });
+  }
+
+  // Clear cookies in the client's browser
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken', { path: '/api/v1/auth' });
+
   res.status(StatusCodes.OK).json({ msg: 'user logged out!' });
 }
+
+const refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.signedCookies;
+  
+  if (refreshToken) {
+    const token = await Token.findOne({ where: { refresh_token: refreshToken } });
+    if (!token) throw new UnauthenticatedError('Invalid Token');
+    if (new Date() >= token.expiry) throw new UnauthenticatedError('Invalid Token');
+    
+    const user = await User.findOne({ where: { id: token.userId } });
+    const jwtPayload = {
+      user: {
+        userId: user.id,
+        email: user.email,
+        username: user.username
+      }
+    };
+    req.user = jwtPayload.user;
+
+    // Generate a new pair of access token and refresh token
+    const newRefreshToken = crypto.randomBytes(40).toString('hex');
+    const tokenExpiry = new Date(token.expiry);
+    attachCookies(res, jwtPayload, newRefreshToken, tokenExpiry);
+
+    await Token.create({ 
+      refresh_token: newRefreshToken,
+      user_agent: req.headers['user-agent'],
+      ip: req.ip,
+      userId: user.id
+    });
+
+    // Revoke old refresh token in the database
+    await token.destroy();
+    res.status(StatusCodes.OK).json({ msg: 'New access token returned' });
+  }
+  throw new UnauthenticatedError('Unauthenticated');
+};
 
 const resetPassword = async (req, res) => {
   const { email } = req.params;
@@ -188,6 +223,7 @@ module.exports = {
   verifyEmail,
   login,
   logout,
+  refreshAccessToken,
   resetPassword,
   changePassword,
   changeUsername

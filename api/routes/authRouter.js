@@ -6,6 +6,7 @@ const {
   verifyEmail,
   login,
   logout,
+  refreshAccessToken,
   resetPassword,
   changePassword,
   changeUsername
@@ -22,6 +23,7 @@ router.post('/register', checkSchema({
 router.post('/login', login);
 
 router.delete('/logout', logout);
+router.post('/refresh-token', refreshAccessToken);
 router.post('/verify-email', verifyEmail);
 router.patch('/reset-password/:email', resetPassword);
 
