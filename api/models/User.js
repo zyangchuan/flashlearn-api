@@ -20,11 +20,9 @@ const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING(80),
-    allowNull: false
   },
   verification_token: {
     type: DataTypes.CHAR(80),
-    allowNull: false
   },
   verified: {
     type: DataTypes.BOOLEAN,
@@ -33,12 +31,10 @@ const User = sequelize.define('User', {
   },
   password_token: {
     type: DataTypes.CHAR(80),
-    allowNull: true,
     defaultValue: null
   },
   password_token_expiry: {
     type: DataTypes.CHAR(80),
-    allowNull: true,
     defaultValue: null
   }
 });

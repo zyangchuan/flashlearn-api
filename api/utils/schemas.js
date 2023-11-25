@@ -24,8 +24,20 @@ const passwordSchema = {
   isLength: { options: { max: 80 } }
 }
 
+const deckNameSchema = { 
+  notEmpty: true,
+  isLength: { options: { max: 80 } }
+}
+
+const deckDescriptionSchema = { 
+  notEmpty: true,
+  isLength: { options: { max: 200 } }
+}
+
 module.exports = {
   emailSchema,
   usernameSchema,
-  passwordSchema
+  passwordSchema,
+  deckNameSchema,
+  deckDescriptionSchema
 }

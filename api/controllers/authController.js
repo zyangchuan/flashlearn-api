@@ -4,6 +4,7 @@ const { literal } = require('sequelize');
 const { validationResult } = require('express-validator');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { google } = require('googleapis');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, UnauthenticatedError } = require('../errors');
 
@@ -17,24 +18,24 @@ const register = async (req, res) => {
 
   // Check if email exists
   const emailExists = await User.findOne({ where: { email: email }, attributes: ['email'] });
-  if (emailExists) throw new BadRequestError('The email is already in use.');
+  if (emailExists) throw new BadRequestError('The email is already taken.');
 
   // Check if username exists
   const nameExists = await User.findOne({ where: { username: username }, attributes: ['username'] });
-  if (nameExists) throw new BadRequestError('The username is already in use.');
+  if (nameExists) throw new BadRequestError('The username is already taken.');
 
   // Hash password
   const salt = await bcrypt.genSalt(10);
-  const password = await bcrypt.hash(req.body.password, salt);
+  const hashedPassword = await bcrypt.hash(req.body.password, salt);
   
   // Verification token
   const verificationToken = crypto.randomBytes(40).toString('hex');
 
-  // Create a new user
+  // Create a new user 
   const user = await User.create({ 
     email: email, 
     username: username, 
-    password: password,
+    password: hashedPassword,
     verification_token: verificationToken
   });
 
@@ -48,58 +49,44 @@ const verifyEmail = async (req, res) => {
 
   // Check if email exists
   const emailExists = await User.findOne({ where: { email: email }, attributes: ['email'] });
-  if (!emailExists) throw new BadRequestError('The link is invalid');
+  if (!emailExists) throw new BadRequestError('The link is invalid.');
 
   const user = await User.findOne({ where: { email: email }});
 
-  if (user.verified) throw new BadRequestError('Email is already verified');
+  if (user.verified) throw new BadRequestError('The email is already verified.');
 
   if (verificationToken !== user.verification_token) {
-    throw new BadRequestError('The link is invalid');
+    throw new BadRequestError('The link is invalid.');
   }
 
   await user.update({ verified: 1 });
 
-  res.status(StatusCodes.OK).json({ msg: 'Email verified' });
+  res.set({ 'Location': process.env.BASE_URL + '/email-verified' });
+  res.status(StatusCodes.MOVED_PERMANENTLY).json({ msg: 'Email verified.' });
 }
 
 const login = async (req, res) => {
+  console.log(req.body)
   const { email, password } = req.body;
 
   // Check if user exists
   const user = await User.findOne({ where: { email: email } });
-  if (!user) throw new UnauthenticatedError('Invalid crendentials');
+  if (!user) throw new UnauthenticatedError('Invalid crendentials.');
+  if (user.id.startsWith('google_')) throw new BadRequestError('Please log in with Google.');
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new UnauthenticatedError('Invalid credentials');
+    throw new UnauthenticatedError('Invalid credentials.');
   }
 
   if (!user.verified) {
-    throw new UnauthenticatedError('Please verify your email');
+    throw new UnauthenticatedError('Please verify your email.');
   }
 
-  const jwtPayload = {
-    user: {
-      userId: user.id,
-      email: user.email,
-      username: user.username
-    }
-  };
+  // Attach access token and refresh token
+  await attachCookies(req, res, user);
 
-  // Generate access token and refresh token
-  const refreshToken = crypto.randomBytes(40).toString('hex');
-  const refreshExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
-  attachCookies(res, jwtPayload, refreshToken, refreshExpiry);
-
-  await Token.create({ 
-    refresh_token: refreshToken,
-    user_agent: req.headers['user-agent'],
-    ip: req.ip,
-    userId: user.id
-  });
-
-  res.status(StatusCodes.OK).json({ msg: 'ok' });
+  res.status(StatusCodes.OK).json({ msg: `${user.username} logged in.` });
 }
 
 const logout = async (req, res) => {
@@ -114,51 +101,32 @@ const logout = async (req, res) => {
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken', { path: '/api/v1/auth' });
 
-  res.status(StatusCodes.OK).json({ msg: 'user logged out!' });
+  res.status(StatusCodes.OK).json({ msg: `User logged out.` });
 }
 
-const refreshAccessToken = async (req, res) => {
-  const { refreshToken } = req.signedCookies;
+// const refreshAccessToken = async (req, res) => {
+//   const { refreshToken } = req.signedCookies;
   
-  if (refreshToken) {
-    const token = await Token.findOne({ where: { refresh_token: refreshToken } });
-    if (!token) throw new UnauthenticatedError('Invalid Token');
-    if (new Date() >= token.expiry) throw new UnauthenticatedError('Invalid Token');
+//   if (refreshToken) {
+//     const token = await Token.findOne({ where: { refresh_token: refreshToken } });
+//     if (!token) throw new UnauthenticatedError('Invalid Token.');
+//     if (new Date() >= token.expiry) throw new UnauthenticatedError('Invalid Token.');
     
-    const user = await User.findOne({ where: { id: token.userId } });
-    const jwtPayload = {
-      user: {
-        userId: user.id,
-        email: user.email,
-        username: user.username
-      }
-    };
-    req.user = jwtPayload.user;
+//     const user = await User.findOne({ where: { id: token.user_id } });
+//     attachCookies(req, res, user)
 
-    // Generate a new pair of access token and refresh token
-    const newRefreshToken = crypto.randomBytes(40).toString('hex');
-    const tokenExpiry = new Date(token.expiry);
-    attachCookies(res, jwtPayload, newRefreshToken, tokenExpiry);
-
-    await Token.create({ 
-      refresh_token: newRefreshToken,
-      user_agent: req.headers['user-agent'],
-      ip: req.ip,
-      userId: user.id
-    });
-
-    // Revoke old refresh token in the database
-    await token.destroy();
-    res.status(StatusCodes.OK).json({ msg: 'New access token returned' });
-  }
-  throw new UnauthenticatedError('Unauthenticated');
-};
+//     // Revoke old refresh token in the database
+//     await token.destroy();
+//     res.status(StatusCodes.OK).json({ msg: 'New access token returned' });
+//   }
+//   throw new UnauthenticatedError('Unauthenticated.');
+// };
 
 const resetPassword = async (req, res) => {
   const { email } = req.params;
   const user = await User.findOne({ where: { email: email } });
   if (!user) {
-    throw new UnauthenticatedError('Invalid Credentials');
+    throw new UnauthenticatedError('Invalid Credentials.');
   }
 
   // Verification token
@@ -169,7 +137,7 @@ const resetPassword = async (req, res) => {
 
   await sendPasswordResetEmail(user.email, passwordToken);
 
-  res.status(StatusCodes.OK).json({ msg: 'Reset password email sent' });
+  res.status(StatusCodes.OK).json({ msg: 'Reset password email sent.' });
 }
 
 const changePassword = async (req, res) => {
@@ -181,12 +149,12 @@ const changePassword = async (req, res) => {
   const { email, password, passwordToken } = req.body;
   const user = await User.findOne({ where: { email: email } });
   if (!user) {
-    throw new UnauthenticatedError('Invalid Credentials');
+    throw new UnauthenticatedError('Invalid Credentials.');
   }
   const tokenMatch = user.password_token === passwordToken;
   const hasExpired = new Date() >= new Date(user.password_token_expiry);
   if (!tokenMatch || hasExpired) {
-    throw new UnauthenticatedError('Invalid Token');
+    throw new UnauthenticatedError('Invalid Token.');
   }
 
   // Hash password
@@ -200,7 +168,7 @@ const changePassword = async (req, res) => {
   await Token.destroy({ where: { userId: user.id } });
   await user.save();
 
-  res.status(StatusCodes.OK).json({ msg: 'Password changed' });
+  res.status(StatusCodes.OK).json({ msg: 'Password changed.' });
 }
 
 const changeUsername = async (req, res) => {
@@ -210,12 +178,54 @@ const changeUsername = async (req, res) => {
   }
 
   const { username } = req.body;
-  const user = await User.findOne({ where: { id: req.user.userId } });
+  const user = await User.findOne({ where: { id: req.user.id } });
 
   user.username = username;
   await user.save();
 
-  res.status(StatusCodes.OK).json({ msg: 'Username updated' });
+  res.status(StatusCodes.OK).json({ msg: 'Username updated.' });
+}
+
+const googleSignIn = async (req, res) => {
+  const { state, code } = req.query;
+
+  if (state != 'google_sign_in') throw new BadRequestError('State does not match.');
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.BASE_URL + '/api/v1/auth/google'
+  );
+
+  const { tokens } = await oauth2Client.getToken(code);
+  oauth2Client.setCredentials({ access_token: tokens.access_token });
+  
+  const oauth2 = google.oauth2({
+    auth: oauth2Client,
+    version: 'v2'
+  });
+  const { data } = await oauth2.userinfo.get();
+
+  let user = await User.findOne({ where: { email: data.email } });
+  
+  if (!user) {
+    user = await User.create({ 
+      id: 'google_' + data.id,
+      email: data.email, 
+      username: data.name,
+      verified: true
+    });
+  }
+
+  // Attach access token and refresh token
+  await attachCookies(req, res, user);
+
+  res.redirect(process.env.BASE_URL + '/app/dashboard');
+}
+
+const getUserInfo = async (req, res) => {
+  const { id, email, username } = req.user;
+  res.status(StatusCodes.OK).json({ user: { id: id, email: email, username: username } });
 }
 
 module.exports = {
@@ -223,8 +233,9 @@ module.exports = {
   verifyEmail,
   login,
   logout,
-  refreshAccessToken,
   resetPassword,
   changePassword,
-  changeUsername
+  changeUsername,
+  googleSignIn,
+  getUserInfo
 }

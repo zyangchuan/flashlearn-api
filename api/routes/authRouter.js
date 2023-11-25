@@ -6,10 +6,11 @@ const {
   verifyEmail,
   login,
   logout,
-  refreshAccessToken,
   resetPassword,
   changePassword,
-  changeUsername
+  changeUsername,
+  googleSignIn,
+  getUserInfo
 } = require('../controllers/authController');
 
 const authenticateUser = require('../middlewares/authentication');
@@ -23,8 +24,8 @@ router.post('/register', checkSchema({
 router.post('/login', login);
 
 router.delete('/logout', logout);
-router.post('/refresh-token', refreshAccessToken);
-router.post('/verify-email', verifyEmail);
+// router.get('/refresh-token', refreshAccessToken);
+router.get('/verify-email', verifyEmail);
 router.patch('/reset-password/:email', resetPassword);
 
 router.patch('/change-password', checkSchema({ 
@@ -34,5 +35,8 @@ router.patch('/change-password', checkSchema({
 router.patch('/change-username', authenticateUser, checkSchema({ 
   username: usernameSchema
 }), changeUsername);
+
+router.get('/google', googleSignIn);
+router.get('/me', authenticateUser, getUserInfo);
 
 module.exports = router;

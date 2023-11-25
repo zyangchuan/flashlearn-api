@@ -22,7 +22,7 @@ const sendVerificationEmail = async (email, token) => {
       to: email,
       subject: "Verify your email",
       text: 
-        `Welcome to FlashLearn! Click on the link to verify your email: https://www.flashlearn.io/verify-email?email=${email}&verificationToken=${token}`,
+        `Welcome to FlashLearn! Click on the link to verify your email: ${process.env.BASE_URL}/verify-email?email=${email}&verificationToken=${token}`,
     }
   );
 }

@@ -20,7 +20,7 @@ const Token = sequelize.define('Token', {
     allowNull: false,
     defaultValue: sequelize.literal('(NOW() + INTERVAL 7 DAY)')
   },
-  userId: {
+  user_id: {
     type: DataTypes.UUID,
     allowNull: false
   }
