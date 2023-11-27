@@ -1,24 +1,28 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db/sequelize');
 
-const Deck = sequelize.define('Deck', {
+const Card = sequelize.define('Card', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  deck_name: {
-    type: DataTypes.STRING(100),
+  type: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  question: {
+    type: DataTypes.STRING(200),
     allowNull: false,
   },
-  deck_description: {
+  answer: {
     type: DataTypes.STRING(200),
   },
-  author_user_id: {
+  deck_id: {
     type: DataTypes.UUID,
     allowNull: false
   }
 });
 
-module.exports = Deck;
+module.exports = Card;

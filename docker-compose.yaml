@@ -32,7 +32,8 @@ services:
   proxy:
     depends_on:
       - api
-    container_name: flashlearn-proxy
+    image: flashlearn-reverse-proxy:latest
+    container_name: flashlearn-reverse-proxy
     build: ./nginx/
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf

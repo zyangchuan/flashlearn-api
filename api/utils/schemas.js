@@ -30,7 +30,15 @@ const deckNameSchema = {
 }
 
 const deckDescriptionSchema = { 
+  isLength: { options: { max: 200 } }
+}
+
+const cardQuestionSchema = { 
   notEmpty: true,
+  isLength: { options: { max: 200 } }
+}
+
+const cardAnswerSchema = {
   isLength: { options: { max: 200 } }
 }
 
@@ -39,5 +47,7 @@ module.exports = {
   usernameSchema,
   passwordSchema,
   deckNameSchema,
-  deckDescriptionSchema
+  deckDescriptionSchema,
+  cardQuestionSchema,
+  cardAnswerSchema
 }

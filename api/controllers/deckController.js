@@ -9,10 +9,10 @@ const getAllDecks = async (req, res) => {
 }
 
 const getSingleDeck = async (req, res) => {
-  const { deckId } = req.params;
-  const deck = await Deck.findOne({ where: { id: deckId, author_user_id: req.user.id } });
-  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
-  res.status(StatusCodes.OK).json({ deck });
+  const { id } = req.params;
+  const deck = await Deck.findOne({ where: { id: id, author_user_id: req.user.id } });
+  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
+  res.status(StatusCodes.OK).json(deck);
 }
 
 const createDeck = async (req, res) => {
@@ -25,17 +25,17 @@ const createDeck = async (req, res) => {
   await Deck.create({
     deck_name: deckName,
     deck_description: deckDescription,
-    author_user_id: req.user.userId
+    author_user_id: req.user.id
   })
   res.status(StatusCodes.CREATED).json({ msg: "Deck created." });
 }
 
 const updateDeck = async (req, res) => {
-  const { deckId } = req.params;
+  const { id } = req.params;
   const { deckName, deckDescription } = req.body;
   
-  const deck = await Deck.findOne({ where: { id: deckId, author_user_id: req.user.id } });
-  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
+  const deck = await Deck.findOne({ where: { id: id, author_user_id: req.user.id } });
+  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
 
   if (deckName) deck.deck_name = deckName;
   if (deckDescription) deck.deck_description = deckDescription;
@@ -46,9 +46,9 @@ const updateDeck = async (req, res) => {
 }
 
 const deleteDeck = async (req, res) => {
-  const { deckId } = req.params;
-  const deck = await Deck.findOne({ where: { id: deckId, author_user_id: req.user.id } });
-  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
+  const { id } = req.params;
+  const deck = await Deck.findOne({ where: { id: id, author_user_id: req.user.id } });
+  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
   await deck.destroy();
   res.status(StatusCodes.OK).json({ msg: 'Deck deleted successfully.' });
 }

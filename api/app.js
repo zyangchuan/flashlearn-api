@@ -22,9 +22,11 @@ app.use(express.json());
 // routers
 const authRouter = require('./routes/authRouter');
 const deckRouter = require('./routes/deckRouter');
+const cardRouter = require('./routes/cardRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);
+app.use('/api/v1/card', cardRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

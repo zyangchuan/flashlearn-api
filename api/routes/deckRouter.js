@@ -19,7 +19,7 @@ router.route('/')
     deckName: deckNameSchema, deckDescription: deckDescriptionSchema 
   }), createDeck);
 
-router.route('/:deckId')
+router.route('/:id')
   .get(authenticateUser, getSingleDeck)
   .patch(authenticateUser, updateDeck)
   .delete(authenticateUser, deleteDeck);
