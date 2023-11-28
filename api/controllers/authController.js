@@ -18,11 +18,11 @@ const register = async (req, res) => {
 
   // Check if email exists
   const emailExists = await User.findOne({ where: { email: email }, attributes: ['email'] });
-  if (emailExists) throw new BadRequestError('The email is already taken.');
+  if (emailExists) throw new BadRequestError('email_taken');
 
   // Check if username exists
   const nameExists = await User.findOne({ where: { username: username }, attributes: ['username'] });
-  if (nameExists) throw new BadRequestError('The username is already taken.');
+  if (nameExists) throw new BadRequestError('username_taken');
 
   // Hash password
   const salt = await bcrypt.genSalt(10);
@@ -49,14 +49,14 @@ const verifyEmail = async (req, res) => {
 
   // Check if email exists
   const emailExists = await User.findOne({ where: { email: email }, attributes: ['email'] });
-  if (!emailExists) throw new BadRequestError('The link is invalid.');
+  if (!emailExists) throw new BadRequestError('invalid_link');
 
   const user = await User.findOne({ where: { email: email }});
 
-  if (user.verified) throw new BadRequestError('The email is already verified.');
+  if (user.verified) throw new BadRequestError('email_already_verified');
 
   if (verificationToken !== user.verification_token) {
-    throw new BadRequestError('The link is invalid.');
+    throw new BadRequestError('invalid_link');
   }
 
   await user.update({ verified: 1 });
@@ -71,16 +71,16 @@ const login = async (req, res) => {
 
   // Check if user exists
   const user = await User.findOne({ where: { email: email } });
-  if (!user) throw new UnauthenticatedError('Invalid crendentials.');
-  if (user.id.startsWith('google_')) throw new BadRequestError('Please log in with Google.');
+  if (!user) throw new UnauthenticatedError('invalid_credentials');
+  if (user.id.startsWith('google_')) throw new BadRequestError('Please try signing in with Google.');
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new UnauthenticatedError('Invalid credentials.');
+    throw new UnauthenticatedError('invalid_credentials');
   }
 
   if (!user.verified) {
-    throw new UnauthenticatedError('Please verify your email.');
+    throw new UnauthenticatedError('email_not_verified');
   }
 
   // Attach access token and refresh token
@@ -126,7 +126,7 @@ const resetPassword = async (req, res) => {
   const { email } = req.params;
   const user = await User.findOne({ where: { email: email } });
   if (!user) {
-    throw new UnauthenticatedError('Invalid Credentials.');
+    throw new UnauthenticatedError('invalid_credentials');
   }
 
   // Verification token
@@ -149,12 +149,12 @@ const changePassword = async (req, res) => {
   const { email, password, passwordToken } = req.body;
   const user = await User.findOne({ where: { email: email } });
   if (!user) {
-    throw new UnauthenticatedError('Invalid Credentials.');
+    throw new UnauthenticatedError('invalid_credentials');
   }
   const tokenMatch = user.password_token === passwordToken;
   const hasExpired = new Date() >= new Date(user.password_token_expiry);
   if (!tokenMatch || hasExpired) {
-    throw new UnauthenticatedError('Invalid Token.');
+    throw new UnauthenticatedError('invalid_token');
   }
 
   // Hash password
