@@ -99,7 +99,7 @@ const logout = async (req, res) => {
 
   // Clear cookies in the client's browser
   res.clearCookie('accessToken');
-  res.clearCookie('refreshToken', { path: '/api/v1/auth' });
+  res.clearCookie('refreshToken');
 
   res.status(StatusCodes.OK).json({ msg: `User logged out.` });
 }

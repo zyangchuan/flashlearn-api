@@ -12,7 +12,7 @@ const rateLimiter = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
-app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 60 }));
+app.use(rateLimiter({ windowMs: 1 * 60 * 1000, max: 50 }));
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(helmet());
 app.use(cors());
@@ -23,10 +23,12 @@ app.use(express.json());
 const authRouter = require('./routes/authRouter');
 const deckRouter = require('./routes/deckRouter');
 const cardRouter = require('./routes/cardRouter');
+const studyRouter = require('./routes/studyRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);
 app.use('/api/v1/card', cardRouter);
+app.use('/api/v1/study', studyRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

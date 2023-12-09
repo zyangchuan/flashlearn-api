@@ -19,6 +19,11 @@ const Card = sequelize.define('Card', {
   answer: {
     type: DataTypes.STRING(200),
   },
+  difficulty: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 4
+  },
   deck_id: {
     type: DataTypes.UUID,
     allowNull: false

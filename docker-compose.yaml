@@ -4,6 +4,8 @@ services:
     depends_on:
       db: 
         condition: service_healthy
+      redis:
+        condition: service_healthy
     container_name: flashlearn-api
     image: flashlearn-api:latest
     env_file:
@@ -15,7 +17,7 @@ services:
       - 5001:5000
   db:
     restart: always
-    image: mysql
+    image: mysql:latest
     container_name: flashlearn-db
     env_file:
       - .env
@@ -30,6 +32,22 @@ services:
       - 3306:3306
     expose:
       - 3306
+  redis:
+    restart: always
+    image: redis/redis-stack:latest
+    container_name: flashlearn-redis
+    healthcheck:
+      test: ["CMD", "redis-cli" ,"ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - redis:/var/lib/redis
+    ports:
+      - 6379:6379
+      - 8001:8001
+    expose:
+      - 8001
   proxy:
     restart: always
     depends_on:
@@ -44,3 +62,4 @@ services:
       
 volumes:
   mysql:
+  redis:
