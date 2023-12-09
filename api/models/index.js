@@ -16,7 +16,7 @@ Deck.hasMany(Card, {
   foreignKey: 'deck_id'
 });
 
-(async () => await sequelize.sync())();
+(async () => await sequelize.sync({ alte: true }))();
 
 module.exports = {
   User,
