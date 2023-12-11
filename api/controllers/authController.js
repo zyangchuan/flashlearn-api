@@ -183,6 +183,8 @@ const changeUsername = async (req, res) => {
   user.username = username;
   await user.save();
 
+  res.clearCookie('accessToken')
+
   res.status(StatusCodes.OK).json({ msg: 'Username updated.' });
 }
 
@@ -219,6 +221,8 @@ const googleSignIn = async (req, res) => {
 
   // Attach access token and refresh token
   await attachCookies(req, res, user);
+
+  await oauth2Client.revokeCredentials()
 
   res.redirect(process.env.BASE_URL + '/app/dashboard');
 }

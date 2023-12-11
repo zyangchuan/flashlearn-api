@@ -4,7 +4,7 @@ const { StatusCodes } = require('http-status-codes');
 const { UnauthorizedError, NotFoundError } = require('../errors');
 
 const getAllCards = async (req, res) => {
-  const cards = await Card.findAll({ where: { deck_id: req.params.id } });
+  const cards = await Card.findAll({ where: { deck_id: req.params.id }, order: [['createdAt', 'ASC']] });
   res.status(StatusCodes.OK).json({ cards });
 }
 

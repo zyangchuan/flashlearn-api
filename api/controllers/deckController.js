@@ -4,7 +4,7 @@ const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
 
 const getAllDecks = async (req, res) => {
-  const decks = await Deck.findAll({ where: { author_user_id: req.user.id } });
+  const decks = await Deck.findAll({ where: { author_user_id: req.user.id }, order: [['createdAt', 'ASC']] });
   res.status(StatusCodes.OK).json({ decks });
 }
 
