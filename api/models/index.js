@@ -2,6 +2,7 @@ const User = require('./User');
 const Token = require('./Token');
 const Deck = require('./Deck');
 const Card = require('./Card');
+const Friendship = require('./Friendship')
 const sequelize = require('../db/sequelize');
 
 (async () => await sequelize.authenticate())();
@@ -16,11 +17,13 @@ Deck.hasMany(Card, {
   foreignKey: 'deck_id'
 });
 
+
 (async () => await sequelize.sync({ alte: true }))();
 
 module.exports = {
   User,
   Token,
   Deck,
-  Card
+  Card,
+  Friendship
 };

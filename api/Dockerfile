@@ -1,4 +1,5 @@
 FROM node:slim
+RUN npm install --global nodemon
 WORKDIR /app
 COPY package*.json .
 RUN npm install

@@ -12,6 +12,7 @@ services:
       - .env
     build: ./api/
     volumes:
+      - /app/node_modules
       - ./api:/app
     ports:
       - 5001:5000
@@ -60,6 +61,6 @@ services:
     ports:
       - 80:80
       
-volumes:
+volumes: 
   mysql:
   redis:
