@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-
+const authenticateUser = require('../middlewares/authentication');
 
 const {
-    showFriend,
+    getFriends,
+    findFriends,
     addFriend,
-    showFriendRequests,
+    getFriendRequests,
     acceptFriendRequest,
     removeFriend,
     declineFriendRequest
@@ -13,14 +14,25 @@ const {
 
 
 
+
+router.route('/')
+    .get(authenticateUser,getFriends);
+
+
 router.route('/:id')
-  .get(showFriend)
-  .post(addFriend)
-  .delete(removeFriend);
+  .post(authenticateUser,addFriend)
+  .delete(authenticateUser,removeFriend);
+
+router.route('/find/:id')
+  .get(authenticateUser,findFriends)
+
+  
+router.route('/req/')
+  .get(authenticateUser,getFriendRequests)
+
 
 router.route('/req/:id')
-  .get(showFriendRequests)
-  .patch(acceptFriendRequest)
-  .delete(declineFriendRequest);
+  .patch(authenticateUser,acceptFriendRequest)
+  .delete(authenticateUser,declineFriendRequest);
 
 module.exports = router;
