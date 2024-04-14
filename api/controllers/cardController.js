@@ -1,7 +1,8 @@
-const { Card, Deck } = require('../models');
+const { Card, Deck, Familiarity } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { UnauthorizedError, NotFoundError } = require('../errors');
+const sequelize = require('../db/sequelize');
 
 const getAllCards = async (req, res) => {
   const cards = await Card.findAll({ where: { deck_id: req.params.id }, order: [['createdAt', 'ASC']] });
@@ -15,12 +16,31 @@ const createCard = async (req, res) => {
   }
 
   const { type, question, answer } = req.body;
-  await Card.create({
-    type: type,
-    question: question,
-    answer: answer,
-    deck_id: req.params.id
-  })
+
+  // Start new transaction to insert new records into Cards and Familiarities table
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const newCard = await Card.create({
+      type: type,
+      question: question,
+      answer: answer,
+      deck_id: req.params.id
+    }, { transaction: transaction });
+  
+    // Create familiarity record for the card and the user
+    await Familiarity.create({
+      user_id: req.user.id,
+      card_id: newCard.id
+    }, { transaction: transaction });
+  
+    await transaction.commit();
+
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+  
   res.status(StatusCodes.CREATED).json({ msg: "Card created." });
 }
 

@@ -6,17 +6,16 @@ const User = sequelize.define('User', {
     type: DataTypes.UUID,
     allowNull: false,
     defaultValue: DataTypes.UUIDV4,
+    unique: true,
     primaryKey: true
   },
   email: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    unique: true
   },
   username: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true
   },
   password: {
     type: DataTypes.STRING(80),
@@ -37,6 +36,11 @@ const User = sequelize.define('User', {
     type: DataTypes.CHAR(80),
     defaultValue: null
   }
+}, {
+  indexes: [
+    { fields: ['email'], name: 'email', unique: true },
+    { fields: ['username'], name: 'username', unique: true }
+  ]
 });
 
 module.exports = User;

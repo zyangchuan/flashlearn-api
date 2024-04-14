@@ -11,9 +11,8 @@ const authenticateUser = async (req, res, next) => {
     return next();
 
   } else if (refreshToken) {
-    console.log(refreshToken)
     const token = await Token.findOne({ where: { refresh_token: refreshToken } });
-    console.log(token)
+
     if (!token) throw new UnauthenticatedError('Invalid Token.');
     if (new Date() >= token.expiry) throw new UnauthenticatedError('Invalid Token.');
     

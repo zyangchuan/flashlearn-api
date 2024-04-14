@@ -66,7 +66,6 @@ const verifyEmail = async (req, res) => {
 }
 
 const login = async (req, res) => {
-  console.log(req.body)
   const { email, password } = req.body;
 
   // Check if user exists
@@ -183,7 +182,7 @@ const changeUsername = async (req, res) => {
   user.username = username;
   await user.save();
 
-  res.clearCookie('accessToken')
+  res.clearCookie('accessToken');
 
   res.status(StatusCodes.OK).json({ msg: 'Username updated.' });
 }

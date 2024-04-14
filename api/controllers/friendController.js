@@ -7,7 +7,7 @@ const { Op } = require('sequelize');
 const showFriend = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
     try {

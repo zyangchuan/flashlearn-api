@@ -1,63 +1,58 @@
 const redis = require('../db/connectRedis');
+const sequelize = require('../db/sequelize');
 const { BadRequestError } = require('../errors');
-const { Card, Deck } = require('../models');
+const { Familiarity } = require('../models');
 const { StatusCodes } = require('http-status-codes');
 
-const getCardSet = async (req, res) => {
-  const { id } = req.params;
-  const data = await redis.keys(`cardSet:uncompleted:${id}:${req.user.id}`);
+const CARD_SET_SIZE = 20;
 
-  if (!data.length) {
-    const cards = await Card.findAll({ 
-      where: { deck_id: req.params.id }, 
-      raw: true, 
-      limit: 5,
-      order: [['difficulty', 'DESC']]
-    });
-    if (!cards.length) throw new BadRequestError('There is no cards in the deck');
+const getCard = async (req, res) => {
+  const { cardSet } = req;
+  const topCard = JSON.parse(cardSet.uncompletedCards[0])
+  res.status(StatusCodes.OK).json({ card: topCard });
+}
 
-    const transaction = await redis.multi()
-    cards.forEach(async card => await transaction.rpush(
-      `cardSet:uncompleted:${id}:${req.user.id}`, 
-      JSON.stringify(card), 
-    ))
-    // Card set expires after 1 day
-    await transaction.expire(`cardSet:uncompleted:${id}:${req.user.id}`, 1 * 60 * 60 * 24).exec();
-
-    res.status(StatusCodes.OK).json({ cards });
-  } else {
-    const data = await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 0, -1);
-    const cards = [];
-    data.forEach(card => {
-      cards.push(JSON.parse(card));
-    });
-    res.status(StatusCodes.OK).json({ cards });
-  }
+const getCardSetStatus = async (req, res) => {
+  const { cardSet } = req;
+  res.status(StatusCodes.OK).json({ total: cardSet.cardSetSize, completed: cardSet.completedCards.length });
 }
 
 const updateCardSet = async (req, res) => {
   const { id } = req.params;
-  const { difficulty } = req.body;
-  if (!(await redis.llen(`cardSet:uncompleted:${id}:${req.user.id}`))) throw new BadRequestError('cardset_empty');
+  const { familiarity } = req.body;
+  const { cardSetSize, uncompletedCards } = req.cardSet;
 
-  const card = JSON.parse(await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 0, 0));
+  const card = JSON.parse(uncompletedCards[0]);
+  const transaction = await redis.multi();
 
-  switch(difficulty) {
+  switch(familiarity) {
     case 0:
-      card.difficulty -= 2
-      card.difficulty = Math.max(0, card.difficulty);
-      await redis.multi()
-        .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
-        .lpush(`cardSet:completed:${id}:${req.user.id}`, JSON.stringify(card))
-        .exec();
+      card.familiarity -= 2
+      card.familiarity = Math.max(0, card.familiarity);
+      
+      // if remaining card set has fewer than 4 cards, just push all the way to the back
+      // otherwise push it to the 3rd position
+      if (cardSetSize < 4) {
+        await transaction
+          .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
+          .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
+          .exec();
+      } else {
+        await transaction.lpop(`cardSet:uncompleted:${id}:${req.user.id}`);
+        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 3, 3);
+        await transaction
+          .linsert(`cardSet:uncompleted:${id}:${req.user.id}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .exec();
+      }
       break;
     
     case 1:
-      card.difficulty -= 1
-      card.difficulty = Math.max(0, card.difficulty);
-      const transaction = await redis.multi();
+      card.familiarity -= 1
+      card.familiarity = Math.max(0, card.familiarity);
       
-      if (await redis.llen(`cardSet:uncompleted:${id}:${req.user.id}`) < 5) {
+      // if remaining card set has fewer than 5 cards, just push all the way to the back
+      // otherwise push it to the 4th position
+      if (cardSetSize < 5) {
         await transaction
           .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
           .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
@@ -65,31 +60,62 @@ const updateCardSet = async (req, res) => {
       } else {
         await transaction.lpop(`cardSet:uncompleted:${id}:${req.user.id}`);
         const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 4, 4);
-        console.log(toInsertBefore)
-        await transaction.linsert(`cardSet:uncompleted:${id}:${req.user.id}`, 'BEFORE', toInsertBefore, JSON.stringify(card));
-        await transaction.exec();
+        await transaction
+          .linsert(`cardSet:uncompleted:${id}:${req.user.id}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .exec();
       }
+      
       break;
     
     case 2:
-      card.difficulty += 2
-      card.difficulty = Math.min(4, card.difficulty);
+      card.familiarity += 2
+      card.familiarity = Math.min(4, card.familiarity);
       
-      await redis.multi()
+      await transaction
         .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
-        .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
+        .lpush(`cardSet:completed:${id}:${req.user.id}`, JSON.stringify(card))
         .exec();
+      
       break;
     
     default:
-      throw new BadRequestError('invalid_difficulty');
+      throw new BadRequestError('invalid_familiarity');
+  }
+
+  // Update database if the card set has no more cards
+  if (!await redis.llen(`cardSet:uncompleted:${id}:${req.user.id}`)) {
+    const dbtransaction = await sequelize.transaction();
+    const completedCards = await redis.lrange(`cardSet:completed:${id}:${req.user.id}`, 0, -1);
+
+    completedCards.forEach(async card => {
+      card = JSON.parse(card);
+
+      await Familiarity.update(
+        { familiarity: card.familiarity },
+        { 
+          where: {
+            user_id: req.user.id,
+            card_id: card.id
+          },
+        },
+        { transaction: dbtransaction });
+    });
+
+    try {
+      await dbtransaction.commit();
+      // Clear card set from redis
+      await redis.del(`cardSet:completed:${id}:${req.user.id}`);
+    } catch (error) {
+      await dbtransaction.rollback();
+      throw error;
+    }
   }
 
   res.status(StatusCodes.OK).json({ card });
-
 }
 
 module.exports = {
-  getCardSet,
+  getCard,
+  getCardSetStatus,
   updateCardSet
 }

@@ -12,7 +12,6 @@ services:
       - .env
     build: ./api/
     volumes:
-      - /app/node_modules
       - ./api:/app
       - /app/node_modules
     ports:
