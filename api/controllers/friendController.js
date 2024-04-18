@@ -109,11 +109,8 @@ const acceptFriendRequest = async (req, res) => {
 
   friendRequest.accepted = true;
   const Requeststatus = await friendRequest.save();
-  if (Requeststatus) {
-    res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
-  } else {
-    throw new BadRequestError('Request not accepted');
-  }
+  res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
+
 };
 
 const declineFriendRequest = async (req, res) => {
@@ -138,7 +135,7 @@ const declineFriendRequest = async (req, res) => {
 // This function just find friendship record and delete can already
 const removeFriend = async (req, res) => {
   const friendId = req.params.id;
-  const deletedFriendshipCount = await Friendship.destroy({
+  await Friendship.destroy({
     where: {
       [Op.or]: [
         { requestor: req.user.id, requestee: friendId },
@@ -146,13 +143,9 @@ const removeFriend = async (req, res) => {
       ]
     }
   });
+  res.status(StatusCodes.OK).json({ msg: "Friend removed successfully." });
 
-  if (deletedFriendshipCount > 0) {
-    res.status(StatusCodes.OK).json({ msg: "Friend removed successfully." });
-  } else {
-    throw new BadRequestError('Friend not removed.')
-  }
-};
+  };
 
 module.exports = {
   getFriends,
