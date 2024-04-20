@@ -3,13 +3,13 @@ const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
 
 const {
-    getFriends,
-    findFriends,
-    addFriend,
-    getFriendRequests,
-    acceptFriendRequest,
-    removeFriend,
-    declineFriendRequest
+  getFriends,
+  findFriends,
+  sendFriendRequest,
+  getFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
+  removeFriend
 } = require('../controllers/friendController');
 
 
@@ -20,7 +20,7 @@ router.route('/')
 
 
 router.route('/:id')
-  .post(authenticateUser,addFriend)
+  .post(authenticateUser,sendFriendRequest)
   .delete(authenticateUser,removeFriend);
 
 router.route('/find/:id')
