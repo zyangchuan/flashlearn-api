@@ -1,13 +1,18 @@
 const { Sequelize } = require('../db/sequelize');
-const { BadRequestError } = require('../errors');
+const { BadRequestError } = require('../errors'); // import NotFoundError and delete BadRequestError
 const { Friendship, User } = require('../models');
 const { StatusCodes } = require('http-status-codes');
 const { Op } = require('sequelize');
 
+// searchUsers for the controller name cuz its not clear if its searching among the list of friends or searching users
 const findFriends = async (req, res) => {
+
+  // use query parameter to get the search value
+  // in the url /search?username=jerryl the query parameter 'username' is 'jerryl'
+  // const username = req.query.username
+
   const query = req.params.id;
 
-  // variable name use searchResult
   const searchResult = await User.findAll({
     where: {
       [Sequelize.Op.and]: [
@@ -27,6 +32,8 @@ const findFriends = async (req, res) => {
     }
   });
 
+  // Just straight away return list of users no need extra attribute name 
+  // json({ searchResult })
   res.status(StatusCodes.OK).json({ users: searchResult });
 };
 
@@ -67,7 +74,12 @@ const getFriends = async (req, res) => {
 };
 
 const sendFriendRequest = async (req, res) => {
-  const FriendId = req.params.id;
+  const FriendId = req.params.id; // friendId
+
+  // validate if the id exists
+  // const user = User.FindOne({ where: { id: friendId } })
+  // if (!user) throw new NotFoundError('User does not exist.')
+
   Friendship.create({
     requestee: FriendId,
     requestor: req.user.id,
@@ -87,6 +99,7 @@ const getFriendRequests = async (req, res) => {
 
   const requestorIds = friendRequests.map(friendRequest => friendRequest.requestor);
 
+  // Join table first then query the users directly and only need userid, username and pfp attributes
   const requestors = await User.findAll({
     where: {
       id: requestorIds
@@ -97,7 +110,9 @@ const getFriendRequests = async (req, res) => {
 };
 
 const acceptFriendRequest = async (req, res) => {
-  const requestorId = req.params.id; // variable name use requestorId
+  const requestorId = req.params.id;
+
+  // validate if the id exists
 
   const friendRequest = await Friendship.findOne({
     where: {
@@ -107,8 +122,10 @@ const acceptFriendRequest = async (req, res) => {
     }
   });
 
+  // if (!friendRequest) throw new NotFoundError('Friend request does not exist.')
+
   friendRequest.accepted = true;
-  const Requeststatus = await friendRequest.save();
+  const Requeststatus = await friendRequest.save(); // delete unused variable names so just save() can alr
   res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
 
 };
@@ -124,6 +141,11 @@ const declineFriendRequest = async (req, res) => {
     }
   });
 
+  // do this 3 lines only
+  // if (!friendRequest) throw new NotFoundError('Friend request does not exist.')
+  // await friendRequest.destroy()
+  // res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
+
   if (friendRequest) {
     await friendRequest.destroy();
     res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
@@ -132,9 +154,11 @@ const declineFriendRequest = async (req, res) => {
   }
 };
 
-// This function just find friendship record and delete can already
 const removeFriend = async (req, res) => {
   const friendId = req.params.id;
+
+  // validate if the id exists
+
   await Friendship.destroy({
     where: {
       [Op.or]: [

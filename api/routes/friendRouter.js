@@ -12,24 +12,21 @@ const {
   removeFriend
 } = require('../controllers/friendController');
 
-
-
-
 router.route('/')
     .get(authenticateUser,getFriends);
-
 
 router.route('/:id')
   .post(authenticateUser,sendFriendRequest)
   .delete(authenticateUser,removeFriend);
 
+// use '/search'
 router.route('/find/:id')
   .get(authenticateUser,findFriends)
 
-  
+// delete trailing back slash
+// use full variable name 'request'
 router.route('/req/')
   .get(authenticateUser,getFriendRequests)
-
 
 router.route('/req/:id')
   .patch(authenticateUser,acceptFriendRequest)
