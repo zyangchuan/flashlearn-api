@@ -26,6 +26,8 @@ const searchUsers = async (req, res) => {
     }
   });
 
+  // Just straight away return list of users no need extra attribute name 
+  // json({ searchResult })
   res.status(StatusCodes.OK).json({ users: searchResult });
 };
 
@@ -126,6 +128,11 @@ const declineFriendRequest = async (req, res) => {
       accepted: false
     },
   });
+
+  // do this 3 lines only
+  // if (!friendRequest) throw new NotFoundError('Friend request does not exist.')
+  // await friendRequest.destroy()
+  // res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
 
   if (!friendRequest) {
     throw new NotFoundError('Friend request does not exist.');
