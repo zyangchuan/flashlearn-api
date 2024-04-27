@@ -5,7 +5,7 @@ const { StatusCodes } = require('http-status-codes');
 const { Op } = require('sequelize');
 
 const searchUsers = async (req, res) => {
-  const username = req.params.username;
+  const username = req.query.username;
 
   const searchResult = await User.findAll({
     where: {
