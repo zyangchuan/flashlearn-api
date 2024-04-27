@@ -12,7 +12,7 @@ const rateLimiter = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
-app.use(rateLimiter({ windowMs: 1 * 60 * 1000, max: 50 }));
+app.use(rateLimiter({ windowMs: 1 * 60 * 1000, max: 1000 }));
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(helmet());
 app.use(cors());
