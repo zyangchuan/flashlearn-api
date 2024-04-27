@@ -3,8 +3,8 @@ const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
 
 const {
+  searchUsers,
   getFriends,
-  findFriends,
   sendFriendRequest,
   getFriendRequests,
   acceptFriendRequest,
@@ -19,13 +19,12 @@ router.route('/:id')
   .post(authenticateUser,sendFriendRequest)
   .delete(authenticateUser,removeFriend);
 
-// use '/search'
-router.route('/find/:id')
-  .get(authenticateUser,findFriends)
 
-// delete trailing back slash
-// use full variable name 'request'
-router.route('/req/')
+router.route('/search/:id')
+  .get(authenticateUser,searchUsers)
+
+
+router.route('/request')
   .get(authenticateUser,getFriendRequests)
 
 router.route('/req/:id')
