@@ -56,7 +56,7 @@ const getFriends = async (req, res) => {
     where: {
       id: friendIds,
     },
-    attributes: ['username', 'id']
+    attributes: ['username', 'id','profile_picture']
   });
 
   res.status(StatusCodes.OK).json({ friends });
