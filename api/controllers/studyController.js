@@ -3,18 +3,18 @@ const sequelize = require('../db/sequelize');
 const { BadRequestError } = require('../errors');
 const { Familiarity } = require('../models');
 const { StatusCodes } = require('http-status-codes');
-
-const CARD_SET_SIZE = 20;
+const { getCardSetInfo } = require('../utils')
 
 const getCard = async (req, res) => {
   const { cardSet } = req;
-  const topCard = JSON.parse(cardSet.uncompletedCards[0])
-  res.status(StatusCodes.OK).json({ card: topCard });
+  const card = JSON.parse(cardSet.uncompletedCards[0])
+  res.status(StatusCodes.OK).json({ card });
 }
 
 const getCardSetStatus = async (req, res) => {
-  const { cardSet } = req;
-  res.status(StatusCodes.OK).json({ total: cardSet.cardSetSize, completed: cardSet.completedCards.length });
+  const info = await getCardSetInfo(req.user.id, req.params.id);
+  const status = { completed: info.completedCards.length, total: info.cardSetSize }
+  res.status(StatusCodes.OK).json({ status });
 }
 
 const updateCardSet = async (req, res) => {
@@ -103,8 +103,6 @@ const updateCardSet = async (req, res) => {
 
     try {
       await dbtransaction.commit();
-      // Clear card set from redis
-      await redis.del(`cardSet:completed:${id}:${req.user.id}`);
     } catch (error) {
       await dbtransaction.rollback();
       throw error;

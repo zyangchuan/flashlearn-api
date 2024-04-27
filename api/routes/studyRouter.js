@@ -13,9 +13,9 @@ const {
 
 router.route('/:id')
   .get(authenticateUser, authorizeUser, getCardSet, getCard)
-  .post(authenticateUser, authorizeUser, getCardSet, updateCardSet);
+  .patch(authenticateUser, authorizeUser, getCardSet, updateCardSet);
 
 router.route('/status/:id')
-  .get(authenticateUser, authorizeUser, getCardSet, getCardSetStatus);
+  .get(authenticateUser, authorizeUser, getCardSetStatus);
 
 module.exports = router;
