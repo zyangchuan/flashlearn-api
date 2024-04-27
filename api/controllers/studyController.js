@@ -20,8 +20,7 @@ const getCardSetStatus = async (req, res) => {
 const updateCardSet = async (req, res) => {
   const { id } = req.params;
   const { familiarity } = req.body;
-  const { cardSetSize, uncompletedCards } = req.cardSet;
-
+  const { uncompletedCards } = req.cardSet;
   const card = JSON.parse(uncompletedCards[0]);
   const transaction = await redis.multi();
 
@@ -32,7 +31,7 @@ const updateCardSet = async (req, res) => {
       
       // if remaining card set has fewer than 4 cards, just push all the way to the back
       // otherwise push it to the 3rd position
-      if (cardSetSize < 4) {
+      if (uncompletedCards.length < 4) {
         await transaction
           .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
           .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
@@ -52,7 +51,7 @@ const updateCardSet = async (req, res) => {
       
       // if remaining card set has fewer than 5 cards, just push all the way to the back
       // otherwise push it to the 4th position
-      if (cardSetSize < 5) {
+      if (uncompletedCards.length < 5) {
         await transaction
           .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
           .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
