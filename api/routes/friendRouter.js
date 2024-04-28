@@ -20,7 +20,7 @@ router.route('/:id')
   .delete(authenticateUser,removeFriend);
 
 
-router.route('/search/:id')
+router.route('/search')
   .get(authenticateUser,searchUsers)
 
 
