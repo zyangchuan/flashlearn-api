@@ -1,7 +1,7 @@
 const { Deck } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
-const { NotFoundError } = require('../errors');
+const { BadRequestError, NotFoundError } = require('../errors');
 
 const getAllDecks = async (req, res) => {
   const decks = await Deck.findAll({ where: { author_user_id: req.user.id }, order: [['createdAt', 'ASC']] });
