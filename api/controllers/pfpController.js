@@ -53,7 +53,7 @@ const addProfilepic = async (req, res) => {
 };}
 
 const getProfilepic = async(req,res) =>{
-  pic_id = req.query.profile_picture
+  pic_id = req.params.profile_picture
   imageurl = await getSignedUrl(
     s3Client, 
     new GetObjectCommand({

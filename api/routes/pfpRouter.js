@@ -11,6 +11,8 @@ const {
 
 router.route('/')
   .post(upload.single('file'),authenticateUser,addProfilepic)
+
+router.route('/:profile_picture')
   .get(authenticateUser,getProfilepic)
 
 module.exports = router;
