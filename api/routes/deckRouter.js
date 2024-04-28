@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 
 const authenticateUser = require('../middlewares/authentication');
-const authorizeUser = require('../middlewares/authorization');
 const { deckNameSchema, deckDescriptionSchema } = require('../utils/schemas');
 const { checkSchema } = require('express-validator');
 
@@ -22,7 +21,7 @@ router.route('/')
 
 router.route('/:id')
   .get(authenticateUser, getSingleDeck)
-  .patch(authenticateUser, authorizeUser, updateDeck)
-  .delete(authenticateUser, authorizeUser, deleteDeck);
+  .patch(authenticateUser, updateDeck)
+  .delete(authenticateUser, deleteDeck);
 
 module.exports = router;
