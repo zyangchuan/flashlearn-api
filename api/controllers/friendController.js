@@ -1,20 +1,19 @@
 const { Sequelize } = require('../db/sequelize');
-const { BadRequestError } = require('../errors');
+const { NotFoundError } = require('../errors'); 
 const { Friendship, User } = require('../models');
 const { StatusCodes } = require('http-status-codes');
 const { Op } = require('sequelize');
 
-const findFriends = async (req, res) => {
-  const query = req.params.id;
+const searchUsers = async (req, res) => {
+  const username = req.query.username;
 
-  // variable name use searchResult
   const searchResult = await User.findAll({
     where: {
       [Sequelize.Op.and]: [
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('username')),
           {
-            [Sequelize.Op.like]: query.toLowerCase() + '%'
+            [Sequelize.Op.like]: username.toLowerCase() + '%'
           }
         ),
         Sequelize.where(
@@ -27,7 +26,8 @@ const findFriends = async (req, res) => {
     }
   });
 
-  res.status(StatusCodes.OK).json({ users: searchResult });
+
+  res.status(StatusCodes.OK).json({searchResult });
 };
 
 const getFriends = async (req, res) => {
@@ -50,26 +50,26 @@ const getFriends = async (req, res) => {
   const allFriendships = [...requestorFriendships, ...requesteeFriendships];
 
   const friendIds = allFriendships.map(friendship => {
-    if (friendship.requestor === req.user.id) {
-      return friendship.requestee;
-    } else {
-      return friendship.requestor;
-    }
+    return friendship.requestor === req.user.id ? friendship.requestee : friendship.requestor;
   });
 
   const friends = await User.findAll({
     where: {
-      id: friendIds
-    }
+      id: friendIds,
+    },
+    attributes: ['username', 'id', 'profile_picture']
   });
 
   res.status(StatusCodes.OK).json({ friends });
 };
 
 const sendFriendRequest = async (req, res) => {
-  const FriendId = req.params.id;
-  Friendship.create({
-    requestee: FriendId,
+  const friendId = req.params.id;
+  const user = await User.findOne({ where: { id: friendId } });
+  if (!user) throw new NotFoundError('User does not exist');
+
+  await Friendship.create({
+    requestee: friendId,
     requestor: req.user.id,
     accepted: false
   });
@@ -86,18 +86,16 @@ const getFriendRequests = async (req, res) => {
   });
 
   const requestorIds = friendRequests.map(friendRequest => friendRequest.requestor);
-
-  const requestors = await User.findAll({
-    where: {
-      id: requestorIds
-    }
-  });
+  const requestors = await User.findAll({ where: { id: requestorIds } });
 
   res.status(StatusCodes.OK).json({ friendRequests: requestors });
 };
 
 const acceptFriendRequest = async (req, res) => {
-  const requestorId = req.params.id; // variable name use requestorId
+  const requestorId = req.params.id;
+  const user = await User.findOne({ where: { id: requestorId } });
+
+  if (!user) throw new NotFoundError('User does not exist');
 
   const friendRequest = await Friendship.findOne({
     where: {
@@ -107,10 +105,12 @@ const acceptFriendRequest = async (req, res) => {
     }
   });
 
-  friendRequest.accepted = true;
-  const Requeststatus = await friendRequest.save();
-  res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
+  if (!friendRequest) throw new NotFoundError('Friend request does not exist.');
 
+  friendRequest.accepted = true;
+  await friendRequest.save(); 
+
+  res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
 };
 
 const declineFriendRequest = async (req, res) => {
@@ -121,20 +121,22 @@ const declineFriendRequest = async (req, res) => {
       requestor: requestorId,
       requestee: req.user.id,
       accepted: false
-    }
+    },
   });
 
-  if (friendRequest) {
-    await friendRequest.destroy();
-    res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
-  } else {
-    throw new BadRequestError('Friend request not declined.')
-  }
+  if (!friendRequest) throw new NotFoundError('Friend request does not exist.');
+
+  await friendRequest.destroy();
+
+  res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
 };
 
-// This function just find friendship record and delete can already
 const removeFriend = async (req, res) => {
   const friendId = req.params.id;
+  const user = await User.findOne({ where: { id: friendId } });
+  
+  if (!user) throw new NotFoundError('User does not exist');
+
   await Friendship.destroy({
     where: {
       [Op.or]: [
@@ -143,13 +145,13 @@ const removeFriend = async (req, res) => {
       ]
     }
   });
-  res.status(StatusCodes.OK).json({ msg: "Friend removed successfully." });
 
-  };
+  res.status(StatusCodes.OK).json({ msg: "Friend removed successfully." });
+};
 
 module.exports = {
   getFriends,
-  findFriends,
+  searchUsers,
   sendFriendRequest,
   getFriendRequests,
   acceptFriendRequest,

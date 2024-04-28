@@ -35,6 +35,10 @@ const User = sequelize.define('User', {
   password_token_expiry: {
     type: DataTypes.CHAR(80),
     defaultValue: null
+  },
+  profile_picture:{
+    type: DataTypes.STRING(200),
+    defaultValue: null 
   }
 }, {
   indexes: [

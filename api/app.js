@@ -16,8 +16,9 @@ app.use(rateLimiter({ windowMs: 1 * 60 * 1000, max: 1000 }));
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(helmet());
 app.use(cors());
-app.use(morgan('tiny'))
-app.use(express.json());
+app.use(morgan('tiny'));
+app.use(express.json({limit: '50mb'}));
+
 
 // routers
 const authRouter = require('./routes/authRouter');
@@ -25,12 +26,14 @@ const deckRouter = require('./routes/deckRouter');
 const cardRouter = require('./routes/cardRouter');
 const studyRouter = require('./routes/studyRouter');
 const friendRouter = require('./routes/friendRouter');
+const profilePictureRouter = require('./routes/profilePictureRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);
 app.use('/api/v1/card', cardRouter);
 app.use('/api/v1/study', studyRouter);
 app.use('/api/v1/friend', friendRouter);
+app.use('/api/v1/profile-picture', profilePictureRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
