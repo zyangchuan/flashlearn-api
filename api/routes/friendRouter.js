@@ -3,8 +3,8 @@ const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
 
 const {
+  searchUsers,
   getFriends,
-  findFriends,
   sendFriendRequest,
   getFriendRequests,
   acceptFriendRequest,
@@ -14,25 +14,21 @@ const {
 
 
 
-
 router.route('/')
-    .get(authenticateUser,getFriends);
-
+    .get(authenticateUser, getFriends);
 
 router.route('/:id')
-  .post(authenticateUser,sendFriendRequest)
-  .delete(authenticateUser,removeFriend);
+  .post(authenticateUser, sendFriendRequest)
+  .delete(authenticateUser, removeFriend);
 
-router.route('/find/:id')
-  .get(authenticateUser,findFriends)
+router.route('/search')
+  .get(authenticateUser, searchUsers)
 
-  
-router.route('/req/')
-  .get(authenticateUser,getFriendRequests)
+router.route('/request')
+  .get(authenticateUser, getFriendRequests)
 
-
-router.route('/req/:id')
-  .patch(authenticateUser,acceptFriendRequest)
-  .delete(authenticateUser,declineFriendRequest);
+router.route('/request/:id')
+  .patch(authenticateUser, acceptFriendRequest)
+  .delete(authenticateUser, declineFriendRequest);
 
 module.exports = router;
