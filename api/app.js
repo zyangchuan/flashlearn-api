@@ -17,7 +17,8 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(helmet());
 app.use(cors());
 app.use(morgan('tiny'));
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
+
 
 
 // routers
@@ -26,7 +27,7 @@ const deckRouter = require('./routes/deckRouter');
 const cardRouter = require('./routes/cardRouter');
 const studyRouter = require('./routes/studyRouter');
 const friendRouter = require('./routes/friendRouter');
-const pfpRouter = require('./routes/pfpRouter');
+const pfpRouter = require('./routes/profilePictureRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);

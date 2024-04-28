@@ -38,7 +38,7 @@ const User = sequelize.define('User', {
   },
   profile_picture:{
     type: DataTypes.STRING(200),
-    defaultValue: 0 // use null default value
+    defaultValue: null 
   }
 }, {
   indexes: [
