@@ -3,24 +3,42 @@ const sequelize = require('../db/sequelize');
 const { BadRequestError } = require('../errors');
 const { Familiarity } = require('../models');
 const { StatusCodes } = require('http-status-codes');
-const { getCardSetInfo } = require('../utils')
+const { createCardSet, getCardSet } = require('../utils')
 
 const getCard = async (req, res) => {
-  const { cardSet } = req;
+  const { id: deckId } = req.params;
+  const { id: userId } = req.user;
+
+  const uncompletedSize = await redis.llen(`cardSet:uncompleted:${deckId}:${userId}`);
+
+  if (!uncompletedSize) {
+    await createCardSet(deckId, userId, 20);
+    // Clear the previous completed card set from redis
+    await redis.del(`cardSet:completed:${deckId}:${userId}`);
+  }
+
+  const cardSet = await getCardSet(deckId, userId);
+
   const card = JSON.parse(cardSet.uncompletedCards[0])
   res.status(StatusCodes.OK).json({ card });
 }
 
 const getCardSetStatus = async (req, res) => {
-  const info = await getCardSetInfo(req.user.id, req.params.id);
-  const status = { completed: info.completedCards.length, total: info.cardSetSize }
+  const { id: deckId } = req.params;
+  const { id: userId } = req.user;
+
+  const { completedCards, cardSetSize } = await getCardSet(deckId, userId);
+  const status = { completed: completedCards.length, total: cardSetSize }
   res.status(StatusCodes.OK).json({ status });
 }
 
 const updateCardSet = async (req, res) => {
-  const { id } = req.params;
+  const { id: deckId } = req.params;
+  const { id: userId } = req.user;
   const { familiarity } = req.body;
-  const { uncompletedCards } = req.cardSet;
+
+  const { uncompletedCards } = await getCardSet(deckId, userId)
+  
   const card = JSON.parse(uncompletedCards[0]);
   const transaction = await redis.multi();
 
@@ -33,14 +51,14 @@ const updateCardSet = async (req, res) => {
       // otherwise push it to the 3rd position
       if (uncompletedCards.length < 4) {
         await transaction
-          .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
-          .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
+          .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
+          .rpush(`cardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
           .exec();
       } else {
-        await transaction.lpop(`cardSet:uncompleted:${id}:${req.user.id}`);
-        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 3, 3);
+        await transaction.lpop(`cardSet:uncompleted:${deckId}:${userId}`);
+        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${deckId}:${userId}`, 3, 3);
         await transaction
-          .linsert(`cardSet:uncompleted:${id}:${req.user.id}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .linsert(`cardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
           .exec();
       }
       break;
@@ -53,14 +71,14 @@ const updateCardSet = async (req, res) => {
       // otherwise push it to the 4th position
       if (uncompletedCards.length < 5) {
         await transaction
-          .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
-          .rpush(`cardSet:uncompleted:${id}:${req.user.id}`, JSON.stringify(card))
+          .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
+          .rpush(`cardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
           .exec();
       } else {
-        await transaction.lpop(`cardSet:uncompleted:${id}:${req.user.id}`);
-        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${id}:${req.user.id}`, 4, 4);
+        await transaction.lpop(`cardSet:uncompleted:${deckId}:${userId}`);
+        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${deckId}:${userId}`, 4, 4);
         await transaction
-          .linsert(`cardSet:uncompleted:${id}:${req.user.id}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .linsert(`cardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
           .exec();
       }
       
@@ -71,8 +89,8 @@ const updateCardSet = async (req, res) => {
       card.familiarity = Math.min(4, card.familiarity);
       
       await transaction
-        .lpop(`cardSet:uncompleted:${id}:${req.user.id}`)
-        .lpush(`cardSet:completed:${id}:${req.user.id}`, JSON.stringify(card))
+        .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
+        .lpush(`cardSet:completed:${deckId}:${userId}`, JSON.stringify(card))
         .exec();
       
       break;
@@ -82,9 +100,9 @@ const updateCardSet = async (req, res) => {
   }
 
   // Update database if the card set has no more cards
-  if (!await redis.llen(`cardSet:uncompleted:${id}:${req.user.id}`)) {
+  if (!await redis.llen(`cardSet:uncompleted:${deckId}:${userId}`)) {
     const dbtransaction = await sequelize.transaction();
-    const completedCards = await redis.lrange(`cardSet:completed:${id}:${req.user.id}`, 0, -1);
+    const completedCards = await redis.lrange(`cardSet:completed:${deckId}:${userId}`, 0, -1);
 
     completedCards.forEach(async card => {
       card = JSON.parse(card);
@@ -93,7 +111,7 @@ const updateCardSet = async (req, res) => {
         { familiarity: card.familiarity },
         { 
           where: {
-            user_id: req.user.id,
+            user_id: userId,
             card_id: card.id
           },
         },
