@@ -13,16 +13,13 @@ const upload = multer({
 }
 })
 
-
 const {
     updateProfilepic,
     getProfilepic,
 } = require("../controllers/profilePictureController")
 
 const handleFileSizeLimitExceeded = (err, req, res, next) => {
-  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-    throw new BadRequestError('File is larger than 5MB')
-  }
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') throw new BadRequestError('Image size cannot be larger than 5MB')
   next(err);
 };
 
