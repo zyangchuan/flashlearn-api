@@ -24,8 +24,6 @@ Card.hasMany(Familiarity, {
   foreignKey: 'card_id'
 });
 
-
-
 (async () => await sequelize.sync({ alter: true }))();
 
 module.exports = {
