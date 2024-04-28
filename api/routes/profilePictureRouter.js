@@ -15,8 +15,8 @@ const upload = multer({
 })
 
 const {
-    updateProfilepicture,
-    getProfilepicture,
+    updateProfilePicture,
+    getProfilePicture,
 } = require("../controllers/profilePictureController")
 
 const handleFileSizeLimitExceeded = (err, req, res, next) => {
@@ -25,11 +25,11 @@ const handleFileSizeLimitExceeded = (err, req, res, next) => {
 };
 
 router.route('/')
-  .patch(upload.single('file'), handleFileSizeLimitExceeded, authenticateUser, updateProfilepicture)
+  .patch(upload.single('file'), handleFileSizeLimitExceeded, authenticateUser, updateProfilePicture)
 
 
 router.route('/:profile_picture')
-  .get(authenticateUser,getProfilepicture)
+  .get(authenticateUser,getProfilePicture)
 
 module.exports = router;
 

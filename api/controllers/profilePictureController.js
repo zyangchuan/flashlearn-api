@@ -14,8 +14,8 @@ const s3Client = new S3Client({
   }
 });
 
-const updateProfilepicture = async (req, res) => {
-    const fileName = crypto.randomBytes(32).toString('hex') + '.jpg'; 
+const updateProfilePicture = async (req, res) => {
+    const fileName = crypto.randomBytes(32).toString('hex') + '.jpg';
     const fileBuffer = await sharp(req.file.buffer)
       .resize({ height: 320, width: 320, fit: "contain" })
       .jpeg({quality:80})
@@ -51,7 +51,7 @@ const updateProfilepicture = async (req, res) => {
     res.status(StatusCodes.OK).json({ msg: 'Profile picture uploaded successfully', filename: fileName });
 };}
 
-const getProfilepicture = async(req,res) =>{
+const getProfilePicture = async(req,res) =>{
   const pic_id = req.params.profile_picture
   imageurl = await getSignedUrl(
     s3Client, 
@@ -70,6 +70,6 @@ const getProfilepicture = async(req,res) =>{
 
 
 module.exports = {
-  updateProfilepicture,
-  getProfilepicture
+  updateProfilePicture,
+  getProfilePicture
 };
