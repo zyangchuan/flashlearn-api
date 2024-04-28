@@ -5,6 +5,9 @@ const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = re
 const { getSignedUrl }  = require("@aws-sdk/s3-request-presigner");
 const { StatusCodes } = require('http-status-codes');
 const sharp = require('sharp');
+
+// Rename file name to profilePictureController
+
 const s3Client = new S3Client({
   region: "ap-southeast-1",
   credentials: {
@@ -12,8 +15,6 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   }
 });
-
-
 
 const addProfilepic = async (req, res) => {
     const fileName = crypto.randomBytes(32).toString('hex') + '.jpg'; // Add file extension
@@ -36,10 +37,11 @@ const addProfilepic = async (req, res) => {
         id: req.user.id
       }
     });
-    if (!user){
-      throw new NotFoundError("User does not exist")
-    }
 
+    if (!user) throw new NotFoundError("User does not exist");
+
+
+    // We can use null for users without a profile pic
     if (user.profile_picture != 0){
       await s3Client.send(new DeleteObjectCommand({
         Bucket: 'flashlearnimages',
@@ -48,11 +50,14 @@ const addProfilepic = async (req, res) => {
     
     user.profile_picture = fileName;
     await user.save();
-    res.status(200).json({ message: 'Profile picture uploaded successfully', filename:fileName });
 
+    // use StatusCodes.OK
+    res.status(200).json({ msg: 'Profile picture uploaded successfully', filename: fileName });
 };}
 
 const getProfilepic = async(req,res) =>{
+  // const imageId = req.params.profile_picture
+  // dont forget variable type
   pic_id = req.params.profile_picture
   imageurl = await getSignedUrl(
     s3Client, 
@@ -62,15 +67,15 @@ const getProfilepic = async(req,res) =>{
     }),
     { expiresIn: 60 }// 60 seconds
   )
-  if (!imageurl){
-    throw new NotFoundError('No images found')
-  }
+  if (!imageurl) throw new NotFoundError('No images found')
+
+  // Use StatusCodes.OK
   res.status(200).send(imageurl);
 }
   
   
 
-
+// eh dont leave so many blank lines leh
 
   
 

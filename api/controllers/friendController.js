@@ -58,7 +58,7 @@ const getFriends = async (req, res) => {
     where: {
       id: friendIds,
     },
-    attributes: ['username', 'id','profile_picture']
+    attributes: ['username', 'id', 'profile_picture']
   });
 
   res.status(StatusCodes.OK).json({ friends });
@@ -67,9 +67,7 @@ const getFriends = async (req, res) => {
 const sendFriendRequest = async (req, res) => {
   const friendId = req.params.id;
   const user = await User.findOne({ where: { id: friendId } });
-  if (!user) {
-    throw new NotFoundError('User does not exist');
-  }
+  if (!user) throw new NotFoundError('User does not exist');
 
   await Friendship.create({
     requestee: friendId,
@@ -97,9 +95,8 @@ const getFriendRequests = async (req, res) => {
 const acceptFriendRequest = async (req, res) => {
   const requestorId = req.params.id;
   const user = await User.findOne({ where: { id: requestorId } });
-  if (!user) {
-    throw new NotFoundError('User does not exist');
-  }
+
+  if (!user) throw new NotFoundError('User does not exist');
 
   const friendRequest = await Friendship.findOne({
     where: {
@@ -109,12 +106,11 @@ const acceptFriendRequest = async (req, res) => {
     }
   });
 
-  if (!friendRequest) {
-    throw new NotFoundError('Friend request does not exist.');
-  }
+  if (!friendRequest) throw new NotFoundError('Friend request does not exist.');
 
   friendRequest.accepted = true;
   await friendRequest.save(); 
+
   res.status(StatusCodes.OK).json({ msg: "Friend request accepted successfully." });
 };
 
@@ -129,24 +125,18 @@ const declineFriendRequest = async (req, res) => {
     },
   });
 
-  // do this 3 lines only
-  // if (!friendRequest) throw new NotFoundError('Friend request does not exist.')
-  // await friendRequest.destroy()
-  // res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
+  if (!friendRequest) throw new NotFoundError('Friend request does not exist.');
 
-  if (!friendRequest) {
-    throw new NotFoundError('Friend request does not exist.');
-  }
   await friendRequest.destroy();
+
   res.status(StatusCodes.OK).json({ msg: "Friend request declined successfully." });
 };
 
 const removeFriend = async (req, res) => {
   const friendId = req.params.id;
   const user = await User.findOne({ where: { id: friendId } });
-  if (!user) {
-    throw new NotFoundError('User does not exist');
-  }
+  
+  if (!user) throw new NotFoundError('User does not exist');
 
   await Friendship.destroy({
     where: {
