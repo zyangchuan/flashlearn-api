@@ -26,9 +26,8 @@ const searchUsers = async (req, res) => {
     }
   });
 
-  // Just straight away return list of users no need extra attribute name 
-  // json({ searchResult })
-  res.status(StatusCodes.OK).json({ users: searchResult });
+
+  res.status(StatusCodes.OK).json({searchResult });
 };
 
 const getFriends = async (req, res) => {

@@ -6,8 +6,6 @@ const { getSignedUrl }  = require("@aws-sdk/s3-request-presigner");
 const { StatusCodes } = require('http-status-codes');
 const sharp = require('sharp');
 
-
-
 const s3Client = new S3Client({
   region: "ap-southeast-1",
   credentials: {
@@ -16,16 +14,13 @@ const s3Client = new S3Client({
   }
 });
 
-const updateProfilepic = async (req, res) => {
-  
-    const fileName = crypto.randomBytes(32).toString('hex') + '.jpg'; // Add file extension
-
+const updateProfilepicture = async (req, res) => {
+    const fileName = crypto.randomBytes(32).toString('hex') + '.jpg'; 
     const fileBuffer = await sharp(req.file.buffer)
       .resize({ height: 320, width: 320, fit: "contain" })
       .jpeg({quality:80})
       .toBuffer();
       
-    
     const uploadParams = {
       Bucket: 'flashlearnimages',
       Key: fileName,
@@ -43,8 +38,6 @@ const updateProfilepic = async (req, res) => {
 
     if (!user) throw new NotFoundError("User does not exist");
 
-
-  
     if (user.profile_picture != null){
       await s3Client.send(new DeleteObjectCommand({
         Bucket: 'flashlearnimages',
@@ -58,7 +51,7 @@ const updateProfilepic = async (req, res) => {
     res.status(StatusCodes.OK).json({ msg: 'Profile picture uploaded successfully', filename: fileName });
 };}
 
-const getProfilepic = async(req,res) =>{
+const getProfilepicture = async(req,res) =>{
   const pic_id = req.params.profile_picture
   imageurl = await getSignedUrl(
     s3Client, 
@@ -77,6 +70,6 @@ const getProfilepic = async(req,res) =>{
 
 
 module.exports = {
-  updateProfilepic,
-  getProfilepic
+  updateProfilepicture,
+  getProfilepicture
 };

@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
 const { BadRequestError } = require('../errors'); 
 const multer = require('multer');
+
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
@@ -14,8 +15,8 @@ const upload = multer({
 })
 
 const {
-    updateProfilepic,
-    getProfilepic,
+    updateProfilepicture,
+    getProfilepicture,
 } = require("../controllers/profilePictureController")
 
 const handleFileSizeLimitExceeded = (err, req, res, next) => {
@@ -24,11 +25,11 @@ const handleFileSizeLimitExceeded = (err, req, res, next) => {
 };
 
 router.route('/')
-  .patch(upload.single('file'), handleFileSizeLimitExceeded, authenticateUser, updateProfilepic)
+  .patch(upload.single('file'), handleFileSizeLimitExceeded, authenticateUser, updateProfilepicture)
 
 
 router.route('/:profile_picture')
-  .get(authenticateUser,getProfilepic)
+  .get(authenticateUser,getProfilepicture)
 
 module.exports = router;
 

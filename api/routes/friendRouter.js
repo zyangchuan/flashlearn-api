@@ -12,7 +12,7 @@ const {
   removeFriend
 } = require('../controllers/friendController');
 
-// Add authorize user middleware to all routes except search users
+
 
 router.route('/')
     .get(authenticateUser, getFriends);
