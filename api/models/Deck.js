@@ -18,6 +18,12 @@ const Deck = sequelize.define('Deck', {
   author_user_id: {
     type: DataTypes.UUID,
     allowNull: false
+  },
+  public:{
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+    
   }
 });
 

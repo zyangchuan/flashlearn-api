@@ -2,12 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 const authenticateUser = require('../middlewares/authentication');
-const authorizeUser = require('../middlewares/authorization');
+const { authorizeViewer, authorizeCollaborator , authorizeOwner } = require('../middlewares/authorization');
 const { deckNameSchema, deckDescriptionSchema } = require('../utils/schemas');
 const { checkSchema } = require('express-validator');
 
 const {
-  getAllDecks,
+  getOwnDecks,
+  addPublicDecks,
+  sharePrivateDecks,
+  getUserDecks,
   getSingleDeck,
   createDeck,
   updateDeck,
@@ -15,14 +18,23 @@ const {
 } = require('../controllers/deckController');
 
 router.route('/')
-  .get(authenticateUser, getAllDecks)
+  .get(authenticateUser, getOwnDecks)
   .post(authenticateUser, checkSchema({ 
     deckName: deckNameSchema, deckDescription: deckDescriptionSchema 
   }), createDeck);
 
+router.route('/user/:id')
+  .get(authenticateUser,getUserDecks);
+
 router.route('/:id')
-  .get(authenticateUser, getSingleDeck)
-  .patch(authenticateUser, authorizeUser, updateDeck)
-  .delete(authenticateUser, authorizeUser, deleteDeck);
+  .get(authenticateUser, authorizeViewer, getSingleDeck)
+  .patch(authenticateUser, authorizeCollaborator, updateDeck)
+  .delete(authenticateUser, authorizeOwner, deleteDeck);
+
+router.route('/publicShare/:deck_id')
+  .post(authenticateUser,addPublicDecks);
+
+router.route('/privateShare/:deck_id')
+  .patch(authenticateUser,sharePrivateDecks);
 
 module.exports = router;
