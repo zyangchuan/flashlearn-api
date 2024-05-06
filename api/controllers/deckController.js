@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { NotFoundError, BadRequestError } = require('../errors');
 
+
 const getOwnDecks = async (req, res) => {
   const deckUsers = await DeckUser.findAll({
     where: { user_id: req.user.id },
@@ -75,6 +76,7 @@ const addPublicDecks = async(req,res) =>{
 const sharePrivateDecks = async(req,res) =>{
   const { role, user_id } = req.body;
   const { deck_id } = req.params;
+  if (!['collaborator', 'viewer'].includes(role)) throw new BadRequestErrorError('Role must be either "collaborator" or "viewer"');
   const deck = await Deck.findOne({
     where:{
       id: deck_id

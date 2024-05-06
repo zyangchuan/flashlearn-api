@@ -3,6 +3,8 @@ const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
 const { BadRequestError } = require('../errors'); 
 const multer = require('multer');
+const { Op } = require('sequelize');
+
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },

@@ -1,13 +1,53 @@
-const { Card, Deck, Familiarity } = require('../models');
+const { Card, Deck, Familiarity,DeckUser } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { UnauthorizedError, NotFoundError } = require('../errors');
 const sequelize = require('../db/sequelize');
+const { Op } = require('sequelize');
 
 const getAllCards = async (req, res) => {
-  const cards = await Card.findAll({ where: { deck_id: req.params.id }, order: [['createdAt', 'ASC']] });
-  res.status(StatusCodes.OK).json({ cards });
+  const deck_id = req.params.id;
+  const user_id = req.user.id;
+
+  const updatedCards = new Set(
+    (await Card.findAll({ 
+      where: { deck_id: deck_id }, 
+      order: [['createdAt', 'ASC']], 
+      attributes: ['card_id'] 
+    })).map(card => card.card_id)
+  );
+
+  const existingFamiliarities = new Set(await Familiarity.findAll({
+    where: {
+      user_id: user_id,
+      card_id: updatedCards,
+    },
+    attributes:['card_id']
+  }));
+
+  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
+  const deletedCards = [...existingFamiliarities].filter(card => !updatedCards.has(card));
+
+
+  await Familiarity.bulkCreate(newCards.map(card => ({
+    user_id: user_id,
+    card_id: card,
+  })));
+
+
+  await Familiarity.destroy({
+    where:{
+    user_id: user_id,
+    card_id: deletedCards,
+    }
+  });
+
+  res.status(StatusCodes.OK).json({updatedCards: Array.from(updatedCards)});
 }
+
+
+
+
 
 const createCard = async (req, res) => {
   const errors = validationResult(req);

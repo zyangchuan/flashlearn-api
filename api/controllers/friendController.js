@@ -31,6 +31,7 @@ const searchUsers = async (req, res) => {
 };
 
 const getFriends = async (req, res) => {
+  const requestor = req.user.id
   const requestorFriendships = await Friendship.findAll({
     where: {
       requestor: req.user.id,
