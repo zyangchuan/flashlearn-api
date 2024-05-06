@@ -3,7 +3,6 @@ const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { UnauthorizedError, NotFoundError } = require('../errors');
 const sequelize = require('../db/sequelize');
-const { Op } = require('sequelize');
 
 const getAllCards = async (req, res) => {
   const deck_id = req.params.id;
