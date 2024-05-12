@@ -6,8 +6,6 @@ const { Op } = require('sequelize');
 
 const findFriends = async (req, res) => {
   const query = req.query.username;
-
-  // variable name use searchResult
   const searchResult = await User.findAll({
     where: {
       [Sequelize.Op.and]: [
@@ -78,22 +76,22 @@ const sendFriendRequest = async (req, res) => {
 };
 
 const getFriendRequests = async (req, res) => {
-  const friendRequests = await Friendship.findAll({
+  const requestors = await Friendship.findAll({
     where: {
       requestee: req.user.id,
       accepted: false
     }
   });
 
-  const requestorIds = friendRequests.map(friendRequest => friendRequest.requestor);
+  const requestorIds = requestors.map(friendRequest => friendRequest.requestor);
 
-  const requestors = await User.findAll({
+  const friendRequests = await User.findAll({
     where: {
       id: requestorIds
     }
   });
 
-  res.status(StatusCodes.OK).json({ friendRequests: requestors });
+  res.status(StatusCodes.OK).json({ friendRequests });
 };
 
 const acceptFriendRequest = async (req, res) => {
