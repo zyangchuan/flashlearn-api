@@ -27,11 +27,11 @@ router.route('/find/:id')
   .get(authenticateUser,findFriends)
 
   
-router.route('/req/')
+router.route('/request/')
   .get(authenticateUser,getFriendRequests)
 
 
-router.route('/req/:id')
+router.route('/request/:id')
   .patch(authenticateUser,acceptFriendRequest)
   .delete(authenticateUser,declineFriendRequest);
 
