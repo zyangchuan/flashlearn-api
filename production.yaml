@@ -2,7 +2,7 @@ services:
   api:
     restart: always
     depends_on:
-      db: 
+      redis: 
         condition: service_healthy
     container_name: flashlearn-api
     image: flashlearn-api:latest

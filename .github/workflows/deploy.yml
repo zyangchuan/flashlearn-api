@@ -50,17 +50,19 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       
       - name: Deploy on EC2
-        env:
-            PRIVATE_KEY: ${{ secrets.FLASHLEARN_SSH_KEY }}
-            HOSTNAME: ${{ secrets.FLASHLEARN_SSH_HOST }}
-            USER_NAME: ${{ secrets.FLASHLEARN_SSH_USER }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            cd ./app &&
-            docker compose -f production.yaml down &&
-            docker compose -f production.yaml rm -sf &&
-            docker compose -f production.yaml pull &&
-            docker compose -f production.yaml up -d &&
-            docker image prune -af '
+        uses: appleboy/ssh-action@master
+        with:
+          PRIVATE_KEY: ${{ secrets.FLASHLEARN_SSH_KEY }}
+          HOSTNAME: ${{ secrets.FLASHLEARN_SSH_HOST }}
+          USER_NAME: ${{ secrets.FLASHLEARN_SSH_USER }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          envs: PRIVATE_KEY, HOSTNAME, USER_NAME, AWS_REGION, AWS_ACCOUNT_ID
+          script: |
+            cd ./app
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            docker compose -f production.yaml down
+            docker compose -f production.yaml rm -sf
+            docker compose -f production.yaml pull
+            docker compose -f production.yaml up -d
+            docker image prune -af
