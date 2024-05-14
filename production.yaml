@@ -7,25 +7,9 @@ services:
     container_name: flashlearn-api
     image: flashlearn-api:latest
     env_file:
-      - .env
+      - production.env
     build: ./api/
-  db:
-    restart: always
-    image: mysql
-    container_name: flashlearn-db
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pflashlearn2023"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    volumes:
-      - mysql:/var/lib/mysql
-    ports:
-      - 3306:3306
-    expose:
-      - 3306
+    command: ["npm", "run", "prod"]
   redis:
     restart: always
     image: redis:latest
@@ -39,12 +23,12 @@ services:
       - redis:/var/lib/redis
     ports:
       - 6379:6379
-  proxy:
+  nginx:
     restart: always
     depends_on:
       - api
-    image: flashlearn-reverse-proxy:latest
-    container_name: flashlearn-reverse-proxy
+    image: flashlearn-nginx:latest
+    container_name: flashlearn-nginx
     build: ./nginx/
     ports:
       - 80:80

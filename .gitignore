@@ -1,3 +1,5 @@
 /api/node_modules
 .env
+production.env
+.DS_Store
 flashlearn_ec2_key.pem

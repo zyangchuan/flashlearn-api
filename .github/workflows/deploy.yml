@@ -1,0 +1,68 @@
+name: Deploy FlashLearn
+
+# run workflow on every push
+on:
+  push:
+    branches:
+      ["master"]
+jobs:
+  deploy:
+    # run workflow on ubuntu with permissions
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-role
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Build, tag, and push flashlearn-api image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: flashlearn-api
+          IMAGE_TAG: latest
+        run: |
+          # build image
+          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ../../api/
+          # push docker image
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Build, tag, and push flashlearn-nginx image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: flashlearn-nginx
+          IMAGE_TAG: latest
+        run: |
+          # build image
+          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ../../nginx/
+          # push docker image
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      
+      - name: Deploy on EC2
+        env:
+            PRIVATE_KEY: ${{ secrets.FLASHLEARN_SSH_KEY }}
+            HOSTNAME: ${{secrets.FLASHLEARN_SSH_HOST}}
+            USER_NAME: ${{secrets.USER_NAME}}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -i private_key ${USER_NAME}@${HOSTNAME}
+
+          ' 
+            cd app &&
+            docker compose down &&
+            docker compose rm -sf &&
+            docker compose pull &&
+            docker compose up -d && 
+            docker image prune -af
+          '
