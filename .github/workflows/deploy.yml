@@ -34,7 +34,7 @@ jobs:
           IMAGE_TAG: latest
         run: |
           # build image
-          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ../../api/
+          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ./api
           # push docker image
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
@@ -45,7 +45,7 @@ jobs:
           IMAGE_TAG: latest
         run: |
           # build image
-          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ../../nginx/
+          docker buildx build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --platform=linux/amd64 ./nginx
           # push docker image
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       
