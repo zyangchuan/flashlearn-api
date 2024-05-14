@@ -60,9 +60,9 @@ jobs:
 
           ' 
             cd app &&
-            docker compose down &&
-            docker compose rm -sf &&
-            docker compose pull &&
-            docker compose up -d && 
+            docker compose -f production.yaml down &&
+            docker compose -f production.yaml rm -sf &&
+            docker compose -f production.yaml pull &&
+            docker compose -f production.yaml up -d && 
             docker image prune -af
           '
