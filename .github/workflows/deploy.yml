@@ -58,6 +58,7 @@ jobs:
           host: ${{ secrets.FLASHLEARN_SSH_HOST }}
           username: ${{ secrets.FLASHLEARN_SSH_USER }}
           key: ${{ secrets.FLASHLEARN_SSH_KEY }}
+          port: 22
           envs: AWS_REGION, AWS_ACCOUNT_ID
           script: |
             cd ./app
