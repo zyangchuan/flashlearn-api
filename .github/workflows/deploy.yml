@@ -55,14 +55,12 @@ jobs:
             HOSTNAME: ${{ secrets.FLASHLEARN_SSH_HOST }}
             USER_NAME: ${{ secrets.FLASHLEARN_SSH_USER }}
         run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME}
-
-          ' 
-            cd app &&
-            docker compose -f production.yaml down &&
-            docker compose -f production.yaml rm -sf &&
-            docker compose -f production.yaml pull &&
-            docker compose -f production.yaml up -d && 
-            docker image prune -af
-          '
+          cd app
+          docker compose -f production.yaml down
+          docker compose -f production.yaml rm -sf
+          docker compose -f production.yaml pull
+          docker compose -f production.yaml up -d
+          docker image prune -af
