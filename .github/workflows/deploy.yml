@@ -52,8 +52,8 @@ jobs:
       - name: Deploy on EC2
         env:
             PRIVATE_KEY: ${{ secrets.FLASHLEARN_SSH_KEY }}
-            HOSTNAME: ${{secrets.FLASHLEARN_SSH_HOST}}
-            USER_NAME: ${{secrets.USER_NAME}}
+            HOSTNAME: ${{ secrets.FLASHLEARN_SSH_HOST }}
+            USER_NAME: ${{ secrets.FLASHLEARN_SSH_USER }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -i private_key ${USER_NAME}@${HOSTNAME}
