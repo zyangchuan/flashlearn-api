@@ -4,7 +4,7 @@ name: Deploy FlashLearn
 on:
   push:
     branches:
-      ["master"]
+      ["main"]
 jobs:
   deploy:
     # run workflow on ubuntu with permissions
