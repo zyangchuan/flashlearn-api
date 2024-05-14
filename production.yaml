@@ -5,7 +5,7 @@ services:
       redis: 
         condition: service_healthy
     container_name: flashlearn-api
-    image: flashlearn-api:latest
+    image: 973495919933.dkr.ecr.ap-southeast-1.amazonaws.com/flashlearn-api
     env_file:
       - production.env
     build: ./api/
@@ -27,7 +27,7 @@ services:
     restart: always
     depends_on:
       - api
-    image: flashlearn-nginx:latest
+    image: 973495919933.dkr.ecr.ap-southeast-1.amazonaws.com/flashlearn-nginx
     container_name: flashlearn-nginx
     build: ./nginx/
     ports:
