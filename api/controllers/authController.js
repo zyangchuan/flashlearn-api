@@ -45,7 +45,7 @@ const register = async (req, res) => {
 }
 
 const verifyEmail = async (req, res) => {
-  const { email, verificationToken } = req.query;
+  const { email, verificationToken } = req.body;
 
   // Check if email exists
   const emailExists = await User.findOne({ where: { email: email }, attributes: ['email'] });
@@ -61,8 +61,7 @@ const verifyEmail = async (req, res) => {
 
   await user.update({ verified: 1 });
 
-  res.set({ 'Location': process.env.BASE_URL + '/email-verified' });
-  res.status(StatusCodes.MOVED_PERMANENTLY).json({ msg: 'Email verified.' });
+  res.status(StatusCodes.OK).json({ msg: 'email_verified' });
 }
 
 const login = async (req, res) => {
@@ -102,24 +101,6 @@ const logout = async (req, res) => {
 
   res.status(StatusCodes.OK).json({ msg: `User logged out.` });
 }
-
-// const refreshAccessToken = async (req, res) => {
-//   const { refreshToken } = req.signedCookies;
-  
-//   if (refreshToken) {
-//     const token = await Token.findOne({ where: { refresh_token: refreshToken } });
-//     if (!token) throw new UnauthenticatedError('Invalid Token.');
-//     if (new Date() >= token.expiry) throw new UnauthenticatedError('Invalid Token.');
-    
-//     const user = await User.findOne({ where: { id: token.user_id } });
-//     attachCookies(req, res, user)
-
-//     // Revoke old refresh token in the database
-//     await token.destroy();
-//     res.status(StatusCodes.OK).json({ msg: 'New access token returned' });
-//   }
-//   throw new UnauthenticatedError('Unauthenticated.');
-// };
 
 const resetPassword = async (req, res) => {
   const { email } = req.params;
@@ -212,8 +193,8 @@ const googleSignIn = async (req, res) => {
   if (!user) {
     user = await User.create({ 
       id: 'google_' + data.id,
-      email: data.email, 
-      username: data.name,
+      email: data.email,
+      username: data.name.slice(0, 19),
       verified: true
     });
   }
@@ -223,7 +204,7 @@ const googleSignIn = async (req, res) => {
 
   await oauth2Client.revokeCredentials()
 
-  res.redirect(process.env.BASE_URL + '/app/dashboard');
+  res.redirect(StatusCodes.OK, process.env.BASE_URL + '/app/dashboard');
 }
 
 const getUserInfo = async (req, res) => {

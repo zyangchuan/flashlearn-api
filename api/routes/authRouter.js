@@ -24,8 +24,7 @@ router.post('/register', checkSchema({
 router.post('/login', login);
 
 router.delete('/logout', logout);
-// router.get('/refresh-token', refreshAccessToken);
-router.get('/verify-email', verifyEmail);
+router.patch('/verify-email', verifyEmail);
 router.patch('/reset-password/:email', resetPassword);
 
 router.patch('/change-password', checkSchema({ 

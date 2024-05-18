@@ -1,6 +1,7 @@
 const { User, Token } = require('../models');
 const { isTokenValid, attachCookies } = require('../utils');
 const { UnauthenticatedError } = require('../errors');
+const { StatusCodes } = require('http-status-codes')
 
 const authenticateUser = async (req, res, next) => {
   const { accessToken, refreshToken } = req.signedCookies;
@@ -25,7 +26,7 @@ const authenticateUser = async (req, res, next) => {
     req.user = user;
     return next();
   } else {
-    throw new UnauthenticatedError('Unauthenticated');
+    res.redirect(StatusCodes.UNAUTHORIZED, process.env.BASE_URL + '/sign-in')
   }
 }
 
