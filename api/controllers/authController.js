@@ -204,7 +204,7 @@ const googleSignIn = async (req, res) => {
 
   await oauth2Client.revokeCredentials()
 
-  res.redirect(StatusCodes.OK, process.env.BASE_URL + '/app/dashboard');
+  res.redirect(process.env.BASE_URL + '/app/dashboard');
 }
 
 const getUserInfo = async (req, res) => {
