@@ -25,7 +25,7 @@ const createCardSet = async (deckId, userId, cardSetSize) => {
     order: [['familiarity', 'ASC'], ['updatedAt', 'ASC']]
   });
   
-  if (!cards.length) throw new BadRequestError('There is no cards in the deck');
+  if (!cards.length) throw new BadRequestError('deck_empty');
   
   const transaction = await redis.multi()
   cards.forEach(async card => await transaction.rpush(

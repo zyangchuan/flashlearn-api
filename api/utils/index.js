@@ -2,6 +2,7 @@ const { createJWT, isTokenValid } = require('./jwt');
 const attachCookies = require('./attachCookies');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/sendEmail');
 const createCardSet = require('./createCardSet');
+const getCardSet = require('./getCardSet');
 
 module.exports = {
   createJWT,
@@ -9,5 +10,6 @@ module.exports = {
   attachCookies,
   sendVerificationEmail,
   sendPasswordResetEmail,
-  createCardSet
+  createCardSet,
+  getCardSet
 }
