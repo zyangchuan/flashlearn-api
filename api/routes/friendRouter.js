@@ -17,7 +17,7 @@ const {
 router.route('/')
     .get(authenticateUser, getFriends);
 
-router.route('/:id')
+router.route('/:friendId')
   .post(authenticateUser, sendFriendRequest)
   .delete(authenticateUser, removeFriend);
 
@@ -27,7 +27,7 @@ router.route('/search')
 router.route('/request')
   .get(authenticateUser, getFriendRequests)
 
-router.route('/request/:id')
+router.route('/request/:requestorId')
   .patch(authenticateUser, acceptFriendRequest)
   .delete(authenticateUser, declineFriendRequest);
 

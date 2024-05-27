@@ -7,7 +7,7 @@ const sequelize = require('../db/sequelize');
 const getAllCards = async(req, res) => {
   const cards = await Card.findAll({
     where: {
-      deck_id: req.params.id
+      deck_id: req.params.deckId
     },
     order: [['createdAt', 'ASC']],
   })
@@ -15,26 +15,26 @@ const getAllCards = async(req, res) => {
 }
 
 
-const updateCards = async (req, res) => { 
-  const deck_id = req.params.id;
-  const user_id = req.user.id;
+const updateAllCards = async (req, res) => { 
+  const { deckId }  = req.params;
+  const userId = req.user.id;
 
-  const transaction = await Sequelize.transaction();
+  const transaction = await sequelize.transaction();
 
   try {
     const updatedCards = new Set(
       (await Card.findAll({
-        where: { deck_id: deck_id },
+        where: { deck_id: deckId },
         order: [['createdAt', 'ASC']],
-        attributes: ['card_id']
-      }, { transaction })).map(card => card.card_id)
+        attributes: ['id']
+      }, { transaction })).map(card => card.id)
     );
 
 
     const existingFamiliarities = new Set(
       (await Familiarity.findAll({
         where: {
-          user_id: user_id,
+          user_id: userId,
           card_id: Array.from(updatedCards)
         },
         attributes: ['card_id']
@@ -49,7 +49,7 @@ const updateCards = async (req, res) => {
     if (newCards.length > 0) {
       for (const card of newCards) {
         await Familiarity.create({
-          user_id: user_id,
+          user_id: userId,
           card_id: card
         }, { transaction });
       }
@@ -58,7 +58,7 @@ const updateCards = async (req, res) => {
     if (deletedCards.length > 0) {
       await Familiarity.destroy({
         where: {
-          user_id: user_id,
+          user_id: userId,
           card_id: deletedCards
         },
         transaction
@@ -95,7 +95,7 @@ const createCard = async (req, res) => {
       type: type,
       question: question,
       answer: answer,
-      deck_id: req.params.id
+      deck_id: req.params.deckId
     }, { transaction: transaction });
   
     // Create familiarity record for the card and the user
@@ -147,7 +147,7 @@ const batchDeleteCards = async (req, res) => {
 
 module.exports = {
   getAllCards,
-  updateCards,
+  updateAllCards,
   createCard,
   updateCard,
   deleteCard,

@@ -9,8 +9,8 @@ const { checkSchema } = require('express-validator');
 
 const {
   getOwnDecks,
-  addPublicDecks,
-  sharePrivateDecks,
+  addPublicDeck,
+  sharePrivateDeck,
   getUserDecks,
   getSingleDeck,
   createDeck,
@@ -32,10 +32,10 @@ router.route('/:id')
   .patch(authenticateUser, authorizeCollaborator, updateDeck)
   .delete(authenticateUser, authorizeOwner, deleteDeck);
 
-router.route('/publicShare/:deck_id')
-  .post(authenticateUser,addPublicDecks);
+router.route('/publicShare/:deckId')
+  .post(authenticateUser,addPublicDeck);
 
-router.route('/privateShare/:deck_id')
-  .patch(authenticateUser,sharePrivateDecks);
+router.route('/privateShare/:deckId')
+  .patch(authenticateUser,sharePrivateDeck);
 
 module.exports = router;

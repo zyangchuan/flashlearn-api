@@ -8,13 +8,14 @@ const { checkSchema } = require('express-validator');
 
 const {
   getAllCards,
+  updateAllCards,
   createCard,
   updateCard,
   deleteCard,
   batchDeleteCards
 } = require('../controllers/cardController');
 
-router.route('/:id')
+router.route('/:deckId')
   .get(authenticateUser, authorizeViewer, getAllCards)
   .post(authenticateUser, authorizeCollaborator , checkSchema({
     question: cardQuestionSchema, answer: cardAnswerSchema

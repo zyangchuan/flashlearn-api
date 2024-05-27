@@ -2,7 +2,7 @@ const { Deck, DeckUser } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { NotFoundError, BadRequestError } = require('../errors');
-
+const sequelize = require('../db/sequelize');
 
 const getOwnDecks = async (req, res) => {
   const deckUsers = await DeckUser.findAll({
@@ -45,27 +45,27 @@ const getUserDecks = async(req,res) =>{
   res.status(StatusCodes.OK).json({ decks });
 }
 
-const addPublicDecks = async(req,res) =>{
-  const { deck_id } = req.params
+const addPublicDeck = async(req,res) =>{
+  const { deckId } = req.params
   const deck = await Deck.findOne({
     where:{
-      id: deck_id
+      id: deckId
     }
   })
   if (!deck) throw new NotFoundError ('Deck does not exist');
-  const DeckUserresult = await DeckUser.findOne({
+  const DeckUserResult = await DeckUser.findOne({
     where:{
     user_id: req.user.id,
-    deck_id: deck_id
+    deck_id: deckId
     }
   })
-  if (DeckUserresult){
+  if (DeckUserResult){
     throw new BadRequestError('Already added')
   }
 
   await DeckUser.create({
     user_id: req.user.id,
-    deck_id: deck_id,
+    deck_id: deckId,
     role: 'viewer'
   })
 
@@ -73,28 +73,29 @@ const addPublicDecks = async(req,res) =>{
 
 } 
 
-const sharePrivateDecks = async(req,res) =>{
-  const { role, user_id } = req.body;
-  const { deck_id } = req.params;
+const sharePrivateDeck = async(req,res) =>{
+  const { role, userId } = req.body;
+  const { deckId } = req.params;
   if (!['collaborator', 'viewer'].includes(role)) throw new BadRequestErrorError('Role must be either "collaborator" or "viewer"');
   const deck = await Deck.findOne({
     where:{
-      id: deck_id
+      id: deckId
     }
 
   })
   if (!deck) throw new NotFoundError ('Deck does not exist');
   const deckUserResult = await DeckUser.findOne({
-    user_id: user_id,
-    deck_id: deck_id,
+    user_id: userId,
+    deck_id: deckId,
   })
   if (deckUserResult){
     deckUserResult.role = role
+    await deckUserResult.save()
     res.status(StatusCodes.OK).json('role updated')
   }
   await DeckUser.create({
-    user_id: user_id,
-    deck_id: id,
+    user_id: userId,
+    deck_id: deckId,
     role: role
   })
   res.status(StatusCodes.OK).json('deck shared')
@@ -104,9 +105,9 @@ const sharePrivateDecks = async(req,res) =>{
 
 
 const getSingleDeck = async (req, res) => {
-  const { id } = req.query;
-  const deck = await Deck.findOne({ where: { id: id} });
-  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
+  const { deckId } = req.params;
+  const deck = await Deck.findOne({ where: { id: deckId} });
+  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
   res.status(StatusCodes.OK).json(deck);
 }
 
@@ -117,17 +118,28 @@ const createDeck = async (req, res) => {
   }
 
   const { deckName, deckDescription } = req.body;
-  const newdeck = await Deck.create({
-    deck_name: deckName,
-    deck_description: deckDescription,
-    author_user_id: req.user.id
-  })
-  await DeckUser.create({
-    deck_id: newdeck.id,
-    user_id: req.user.id,
-    role: 'owner'
-  })
-  res.status(StatusCodes.CREATED).json({ msg: "Deck created." });
+  const transaction = await sequelize.transaction();
+  try {
+    const newDeck = await Deck.create({
+      deck_name: deckName,
+      deck_description: deckDescription,
+      author_user_id: req.user.id
+    },{ transaction })
+    await DeckUser.create({
+      deck_id: newDeck.id,
+      user_id: req.user.id,
+      role: 'owner'
+    },{ transaction })
+    await transaction.commit()
+
+    res.status(StatusCodes.CREATED).json({ msg: "Deck created." });
+  } catch (error){
+    await transaction.rollback();
+    throw error;
+  }
+ 
+  
+  
 }
 
 const updateDeck = async (req, res) => {
@@ -162,8 +174,8 @@ const deleteDeck = async (req, res) => {
 module.exports = {
   getOwnDecks,
   getUserDecks,
-  addPublicDecks,
-  sharePrivateDecks,
+  addPublicDeck,
+  sharePrivateDeck,
   getSingleDeck,
   createDeck,
   updateDeck,

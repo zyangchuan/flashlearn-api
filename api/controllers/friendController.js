@@ -42,7 +42,7 @@ const getFriends = async (req, res) => {
 
   const requesteeFriendships = await Friendship.findAll({
     where: {
-      requestee: requesterId,
+      requestee: requestorId,
       accepted: true
     },
     attributes: ['requestee', 'requestor']
@@ -65,7 +65,7 @@ const getFriends = async (req, res) => {
 };
 
 const sendFriendRequest = async (req, res) => {
-  const friendId = req.params.id;
+  const { friendId } = req.params
   const user = await User.findOne({ where: { id: friendId } });
   if (!user) throw new NotFoundError('User does not exist');
 
@@ -93,7 +93,7 @@ const getFriendRequests = async (req, res) => {
 };
 
 const acceptFriendRequest = async (req, res) => {
-  const requestorId = req.params.id;
+  const { requestorId } = req.params;
   const user = await User.findOne({ where: { id: requestorId } });
 
   if (!user) throw new NotFoundError('User does not exist');
@@ -115,7 +115,7 @@ const acceptFriendRequest = async (req, res) => {
 };
 
 const declineFriendRequest = async (req, res) => {
-  const requestorId = req.params.id;
+  const { requestorId } = req.params;
 
   const friendRequest = await Friendship.findOne({
     where: {
@@ -133,7 +133,7 @@ const declineFriendRequest = async (req, res) => {
 };
 
 const removeFriend = async (req, res) => {
-  const friendId = req.params.id;
+  const { friendId }= req.params;
   const user = await User.findOne({ where: { id: friendId } });
   
   if (!user) throw new NotFoundError('User does not exist');
