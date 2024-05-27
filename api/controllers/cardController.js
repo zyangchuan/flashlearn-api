@@ -4,45 +4,76 @@ const { StatusCodes } = require('http-status-codes');
 const { UnauthorizedError, NotFoundError } = require('../errors');
 const sequelize = require('../db/sequelize');
 
-const getAllCards = async (req, res) => {
+const getAllCards = async(req, res) => {
+  const cards = await Card.findAll({
+    where: {
+      deck_id: req.params.id
+    },
+    order: [['createdAt', 'ASC']],
+  })
+  res.status(StatusCodes.OK).json({cards});
+}
+
+
+const updateCards = async (req, res) => { 
   const deck_id = req.params.id;
   const user_id = req.user.id;
 
-  const updatedCards = new Set(
-    (await Card.findAll({ 
-      where: { deck_id: deck_id }, 
-      order: [['createdAt', 'ASC']], 
-      attributes: ['card_id'] 
-    })).map(card => card.card_id)
-  );
+  const transaction = await Sequelize.transaction();
 
-  const existingFamiliarities = new Set(await Familiarity.findAll({
-    where: {
-      user_id: user_id,
-      card_id: updatedCards,
-    },
-    attributes:['card_id']
-  }));
-
-  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
-  const deletedCards = [...existingFamiliarities].filter(card => !updatedCards.has(card));
+  try {
+    const updatedCards = new Set(
+      (await Card.findAll({
+        where: { deck_id: deck_id },
+        order: [['createdAt', 'ASC']],
+        attributes: ['card_id']
+      }, { transaction })).map(card => card.card_id)
+    );
 
 
-  await Familiarity.bulkCreate(newCards.map(card => ({
-    user_id: user_id,
-    card_id: card,
-  })));
+    const existingFamiliarities = new Set(
+      (await Familiarity.findAll({
+        where: {
+          user_id: user_id,
+          card_id: Array.from(updatedCards)
+        },
+        attributes: ['card_id']
+      }, { transaction })).map(fam => fam.card_id)
+    );
 
 
-  await Familiarity.destroy({
-    where:{
-    user_id: user_id,
-    card_id: deletedCards,
+    const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
+    const deletedCards = [...existingFamiliarities].filter(card => !updatedCards.has(card));
+
+
+    if (newCards.length > 0) {
+      for (const card of newCards) {
+        await Familiarity.create({
+          user_id: user_id,
+          card_id: card
+        }, { transaction });
+      }
     }
-  });
 
-  res.status(StatusCodes.OK).json({updatedCards: Array.from(updatedCards)});
+    if (deletedCards.length > 0) {
+      await Familiarity.destroy({
+        where: {
+          user_id: user_id,
+          card_id: deletedCards
+        },
+        transaction
+      });
+    }
+
+    await transaction.commit();
+
+    res.status(StatusCodes.OK).json({ updatedCards: Array.from(updatedCards) });
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 }
+
 
 
 
@@ -116,6 +147,7 @@ const batchDeleteCards = async (req, res) => {
 
 module.exports = {
   getAllCards,
+  updateCards,
   createCard,
   updateCard,
   deleteCard,

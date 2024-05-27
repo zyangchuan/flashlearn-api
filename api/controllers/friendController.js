@@ -31,10 +31,10 @@ const searchUsers = async (req, res) => {
 };
 
 const getFriends = async (req, res) => {
-  const requestor = req.user.id
+  const requestorId = req.user.id
   const requestorFriendships = await Friendship.findAll({
     where: {
-      requestor: req.user.id,
+      requestor: requestorId,
       accepted: true
     },
     attributes: ['requestee', 'requestor']
@@ -42,7 +42,7 @@ const getFriends = async (req, res) => {
 
   const requesteeFriendships = await Friendship.findAll({
     where: {
-      requestee: req.user.id,
+      requestee: requesterId,
       accepted: true
     },
     attributes: ['requestee', 'requestor']

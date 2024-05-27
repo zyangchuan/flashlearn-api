@@ -24,9 +24,6 @@ Deck.hasMany(DeckUser,{
 Deck.hasMany(Card, {
   foreignKey: 'deck_id'
 });
-DeckUser.belongsTo(Deck, {
-  foreignKey: 'deck_id'
-});
 
 User.hasMany(Familiarity, {
   foreignKey: 'user_id'
