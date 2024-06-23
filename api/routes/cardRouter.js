@@ -12,7 +12,8 @@ const {
   createCard,
   updateCard,
   deleteCard,
-  batchDeleteCards
+  batchDeleteCards,
+  getUserCards
 } = require('../controllers/cardController');
 
 router.route('/:deckId')
@@ -25,7 +26,13 @@ router.route('/:deckId')
   }), updateCard)
   .delete(authenticateUser, authorizeCollaborator, batchDeleteCards);
 
-router.route('/:id/:cardId')
+router.route('/getUserCards/:deckId')
+  .get(authenticateUser,getUserCards);
+
+router.route('/:deckId/:cardId')
   .delete(authenticateUser, authorizeCollaborator, deleteCard);
+
+router.route('/update/:deckId')
+  .patch(authenticateUser,authorizeViewer,updateAllCards);
 
 module.exports = router;

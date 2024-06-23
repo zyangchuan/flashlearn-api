@@ -5,42 +5,46 @@ const { NotFoundError, BadRequestError } = require('../errors');
 const sequelize = require('../db/sequelize');
 
 const getOwnDecks = async (req, res) => {
-  const deckUsers = await DeckUser.findAll({
-    where: { user_id: req.user.id },
-    order: [['createdAt', 'ASC']],
-    include: [{
-      model: Deck,
-      attributes: ['id','deck_name','deck_description','public']
-    }]
+  const decks = await DeckUser.findAll({
+  where: { user_id: req.user.id },
+  order: [['createdAt', 'ASC']],
+  include: {
+  model: Deck,
+  attributes: []
+  },
+  attributes: {
+  include: [
+  [sequelize.Sequelize.col('Deck.deck_name'), 'deck_name'],
+  [sequelize.Sequelize.col('Deck.deck_description'), 'deck_description'],
+  [sequelize.Sequelize.col('Deck.public'), 'public']
+  ]
+  },
   });
-  const decks = deckUsers
-      .filter(deckUser => deckUser.Deck)
-      .map(deckUser => {
-        const { id, deck_name, deck_description } = deckUser.Deck;
-        return { id, deck_name, deck_description };
-      });
-
+  
   res.status(StatusCodes.OK).json({ decks });
-}
+  }
 
 const getUserDecks = async(req,res) =>{
-  const deckUsers = await DeckUser.findAll({
+  const decks = await DeckUser.findAll({
     where: {
-      user_id: req.params.id,
-      role: 'owner'
+      user_id: req.params.userId,
+      role: 'owner',
     },
-    include: [{
+    include: {
       model: Deck,
-      where: { public: true }, 
-      attributes: ['id', 'deck_name', 'deck_description'] 
-    }]
-  });
-  const decks = deckUsers
-      .filter(deckUser => deckUser.Deck)
-      .map(deckUser => {
-        const { id, deck_name, deck_description } = deckUser.Deck;
-        return { id, deck_name, deck_description };
-      });
+      attributes: [],
+      where:{
+        public : true
+      }
+    },
+    attributes: {
+      include: [
+        [sequelize.Sequelize.col('Deck.deck_name'), 'deck_name'],
+        [sequelize.Sequelize.col('Deck.deck_description'), 'deck_description'],
+        [sequelize.Sequelize.col('Deck.public'), 'public']
+        ]
+    }
+  })
 
   res.status(StatusCodes.OK).json({ decks });
 }
@@ -55,8 +59,8 @@ const addPublicDeck = async(req,res) =>{
   if (!deck) throw new NotFoundError ('Deck does not exist');
   const DeckUserResult = await DeckUser.findOne({
     where:{
-    user_id: req.user.id,
-    deck_id: deckId
+      user_id: req.user.id,
+      deck_id: deckId
     }
   })
   if (DeckUserResult){
@@ -74,8 +78,7 @@ const addPublicDeck = async(req,res) =>{
 } 
 
 const sharePrivateDeck = async(req,res) =>{
-  const { role, userId } = req.body;
-  const { deckId } = req.params;
+  const { role, userId } = req.body, { deckId } = req.params;
   if (!['collaborator', 'viewer'].includes(role)) throw new BadRequestErrorError('Role must be either "collaborator" or "viewer"');
   const deck = await Deck.findOne({
     where:{
@@ -143,11 +146,11 @@ const createDeck = async (req, res) => {
 }
 
 const updateDeck = async (req, res) => {
-  const { id } = req.params;
+  const { deckId } = req.params;
   const { deckName, deckDescription } = req.body;
   
-  const deck = await Deck.findOne({ where: { id: id } });
-  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
+  const deck = await Deck.findOne({ where: { id: deckId } });
+  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
 
   if (deckName) deck.deck_name = deckName;
   if (deckDescription) deck.deck_description = deckDescription;
@@ -158,17 +161,32 @@ const updateDeck = async (req, res) => {
 }
 
 const deleteDeck = async (req, res) => {
-  const { id } = req.params;
-  const deck = await Deck.findOne({ where: { id: id} });
-  if (!deck) throw new NotFoundError(`Deck with id ${id} is not found.`);
+  const { deckId } = req.params;
+  const deck = await Deck.findOne({ where: { id: deckId} });
+  if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
   await deck.destroy();
-  const deckusers = await DeckUser.findAll({
+  const deckUserResult = await DeckUser.findAll({
     where:{
-      deck_id : id,
+      deck_id : deckId,
     }
   })
-  await deckusers.destroy();
+  await deckUserResult.destroy();
   res.status(StatusCodes.OK).json({ msg: 'Deck deleted successfully.' });
+}
+
+const toggleDeckPublic = async(req,res) =>{
+  console.log(req.params.deckId);
+  const deck = await Deck.findOne({
+    where:{
+      id: req.params.deckId
+    }
+  })
+  if (!deck) throw new NotFoundError('Deck with id ${req.params.deckId} is not found.');
+
+  deck.public = !deck.public;
+  await deck.save();
+
+  res.status(StatusCodes.OK).json({ msg: 'Deck toggled.' });
 }
 
 module.exports = {
@@ -179,5 +197,6 @@ module.exports = {
   getSingleDeck,
   createDeck,
   updateDeck,
-  deleteDeck
+  deleteDeck,
+  toggleDeckPublic
 };
