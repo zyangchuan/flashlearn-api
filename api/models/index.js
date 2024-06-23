@@ -21,6 +21,9 @@ User.hasMany(DeckUser, {
 Deck.hasMany(DeckUser,{
   foreignKey:'deck_id'
 });
+DeckUser.belongsTo(Deck,{
+  foreignKey:'deck_id'
+})
 Deck.hasMany(Card, {
   foreignKey: 'deck_id'
 });

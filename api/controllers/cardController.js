@@ -33,13 +33,16 @@ const updateAllCards = async (req, res) => {
 
     const existingFamiliarities = new Set(
       (await Familiarity.findAll({
-        where: {
-          user_id: userId,
-          card_id: Array.from(updatedCards)
-        },
-        attributes: ['card_id']
-      }, { transaction })).map(fam => fam.card_id)
-    );
+          include: [{
+              model: Card,
+              where: { deck_id: deckId },
+              attributes: [] 
+          }],
+          where: { user_id: userId },
+          attributes: ['card_id'],
+          transaction
+      })).map(fam => fam.card_id)
+  );
 
 
     const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
