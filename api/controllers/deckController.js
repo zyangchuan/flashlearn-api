@@ -2,7 +2,6 @@ const { Deck, DeckUser } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, NotFoundError } = require('../errors');
-const { NotFoundError, BadRequestError } = require('../errors');
 const sequelize = require('../db/sequelize');
 
 const getOwnDecks = async (req, res) => {

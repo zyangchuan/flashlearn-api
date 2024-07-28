@@ -12,22 +12,18 @@ const {
   removeFriend
 } = require('../controllers/friendController');
 
-
-
-
 router.route('/')
     .get(authenticateUser,getFriends);
-
 
 router.route('/:friendId')
   .post(authenticateUser,sendFriendRequest)
   .delete(authenticateUser, removeFriend);
 
 router.route('/search')
-  .get(authenticateUser, searchUsers)
+  .get(authenticateUser, findFriends);
 
 router.route('/request')
-  .get(authenticateUser, getFriendRequests)
+  .get(authenticateUser, getFriendRequests);
 
 router.route('/request/:requestorId')
   .patch(authenticateUser, acceptFriendRequest)
