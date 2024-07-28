@@ -68,7 +68,7 @@ const sendFriendRequest = async (req, res) => {
   const { friendId } = req.params
   if (friendId == req.user.id) {
     throw new BadRequestError('Invalid Request. Friending ownself.');
-  }
+  };
   const user = await User.findOne({ where: { id: friendId } });
   if (!user) throw new NotFoundError('User does not exist');
 
