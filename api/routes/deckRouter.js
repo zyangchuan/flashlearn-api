@@ -34,12 +34,12 @@ router.route('/:deckId')
   .delete(authenticateUser, authorizeOwner, deleteDeck);
 
 router.route('/publicShare/:deckId')
-  .post(authenticateUser,addPublicDeck);
+  .post(authenticateUser, addPublicDeck);
 
 router.route('/privateShare/:deckId')
-  .patch(authenticateUser,sharePrivateDeck);
+  .patch(authenticateUser, sharePrivateDeck);
 
 router.route('/toggleDeckPublic/:deckId')
-  .post(authenticateUser,authorizeOwner,toggleDeckPublic);
+  .post(authenticateUser, authorizeOwner, toggleDeckPublic);
 
 module.exports = router;

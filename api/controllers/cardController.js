@@ -1,37 +1,20 @@
-const { Card, Deck, Familiarity,DeckUser } = require('../models');
+const { Card, Familiarity } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
-const { UnauthorizedError, NotFoundError } = require('../errors');
-const sequelize = require('../db/sequelize');
+const { NotFoundError } = require('../errors');
 
-const getAllCards = async(req, res) => {
+const getAllCards = async (req, res) => {
   const cards = await Card.findAll({
     where: {
       deck_id: req.params.deckId
     },
     order: [['createdAt', 'ASC']],
-  })
-  res.status(StatusCodes.OK).json({cards});
+  });
+
+  res.status(StatusCodes.OK).json({ cards });
 }
 
-const getUserCards = async(req,res) => {
-  const cards = await Familiarity.findAll({
-    where: {
-      user_id: req.user.id
-    },
-    order: [['createdAt', 'ASC']],
-    attributes: ["familiarity"],
-    include:{
-      model: Card,
-      where:{ deck_id: req.params.deckId },
-      attributes: ['question','answer']
-
-    }
-  })
-  res.status(StatusCodes.OK).json({cards});
-}
-
-const updateAllCards = async (req, res) => { 
+const updateFamiliarityData = async (req, res) => { 
   const { deckId } = req.params;
   const userId = req.user.id;
 
@@ -65,21 +48,17 @@ const updateAllCards = async (req, res) => {
     await Familiarity.bulkCreate(familiarityData);
   }
   
-    res.status(StatusCodes.OK).json({ updatedCards: Array.from(newCards) });
-
+  res.status(StatusCodes.OK).json({ msg: 'Familiarity data updated' });
 };
-
-
-
-
-
 
 const createCard = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(StatusCodes.BAD_REQUEST).json({ errors: errors.array() });
   }
+
   const { type, question, answer } = req.body;
+
   await Card.create({
     type: type,
     question: question,
@@ -123,10 +102,9 @@ const batchDeleteCards = async (req, res) => {
 
 module.exports = {
   getAllCards,
-  updateAllCards,
+  updateFamiliarityData,
   createCard,
   updateCard,
   deleteCard,
-  batchDeleteCards,
-  getUserCards
+  batchDeleteCards
 }
