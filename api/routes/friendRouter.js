@@ -19,20 +19,18 @@ router.route('/')
     .get(authenticateUser,getFriends);
 
 
-router.route('/:id')
+router.route('/:friendId')
   .post(authenticateUser,sendFriendRequest)
-  .delete(authenticateUser,removeFriend);
+  .delete(authenticateUser, removeFriend);
 
-router.route('/find/:id')
-  .get(authenticateUser,findFriends)
+router.route('/search')
+  .get(authenticateUser, searchUsers)
 
-  
-router.route('/request/')
-  .get(authenticateUser,getFriendRequests)
+router.route('/request')
+  .get(authenticateUser, getFriendRequests)
 
-
-router.route('/request/:id')
-  .patch(authenticateUser,acceptFriendRequest)
-  .delete(authenticateUser,declineFriendRequest);
+router.route('/request/:requestorId')
+  .patch(authenticateUser, acceptFriendRequest)
+  .delete(authenticateUser, declineFriendRequest);
 
 module.exports = router;

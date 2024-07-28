@@ -1,13 +1,55 @@
-const { Card, Deck, Familiarity } = require('../models');
+const { Card, Familiarity } = require('../models');
 const { validationResult } = require('express-validator');
 const { StatusCodes } = require('http-status-codes');
-const { UnauthorizedError, NotFoundError } = require('../errors');
-const sequelize = require('../db/sequelize');
+const { NotFoundError } = require('../errors');
 
 const getAllCards = async (req, res) => {
-  const cards = await Card.findAll({ where: { deck_id: req.params.id }, order: [['createdAt', 'ASC']] });
+  const cards = await Card.findAll({
+    where: {
+      deck_id: req.params.deckId
+    },
+    order: [['createdAt', 'ASC']],
+  });
+
   res.status(StatusCodes.OK).json({ cards });
 }
+
+const updateFamiliarityData = async (req, res) => { 
+  const { deckId } = req.params;
+  const userId = req.user.id;
+
+  const updatedCards = new Set(
+    (await Card.findAll({
+      where: { deck_id: deckId },
+      attributes: ['id'],
+    })).map(card => card.id)
+  );
+
+  const existingFamiliarities = new Set(
+    (await Familiarity.findAll({
+      include: [{
+        model: Card,
+        where: { deck_id: deckId },
+        attributes: [] 
+      }],
+      where: { user_id: userId },
+      attributes: ['card_id'],
+    })).map(familarity => familarity.card_id)
+  );
+
+  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
+
+  if (newCards.length > 0) {
+    const familiarityData = newCards.map(card => ({
+      user_id: userId,
+      card_id: card
+    }));
+  
+    await Familiarity.bulkCreate(familiarityData);
+  }
+  
+  res.status(StatusCodes.OK).json({ msg: 'Familiarity data updated' });
+};
 
 const createCard = async (req, res) => {
   const errors = validationResult(req);
@@ -17,30 +59,13 @@ const createCard = async (req, res) => {
 
   const { type, question, answer } = req.body;
 
-  // Start new transaction to insert new records into Cards and Familiarities table
-  const transaction = await sequelize.transaction();
-  
-  try {
-    const newCard = await Card.create({
-      type: type,
-      question: question,
-      answer: answer,
-      deck_id: req.params.id
-    }, { transaction: transaction });
-  
-    // Create familiarity record for the card and the user
-    await Familiarity.create({
-      user_id: req.user.id,
-      card_id: newCard.id
-    }, { transaction: transaction });
-  
-    await transaction.commit();
+  await Card.create({
+    type: type,
+    question: question,
+    answer: answer,
+    deck_id: req.params.deckId
+  });
 
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-  
   res.status(StatusCodes.CREATED).json({ msg: "Card created." });
 }
 
@@ -77,6 +102,7 @@ const batchDeleteCards = async (req, res) => {
 
 module.exports = {
   getAllCards,
+  updateFamiliarityData,
   createCard,
   updateCard,
   deleteCard,
