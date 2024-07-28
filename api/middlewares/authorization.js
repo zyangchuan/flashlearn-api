@@ -3,32 +3,31 @@ const { NotFoundError, UnauthorizedError } = require('../errors');
 const { Op } = require('sequelize');
 
 const authorizeViewer = async (req, res, next) => {
-  const deck = await Deck.findOne({ where: { id: req.params.deckId }});
+  const deck = await Deck.findOne({ where: { deck_id: req.params.deckId }});
   if (!deck) throw new NotFoundError(`Deck with id ${req.params.deckId} is not found.`);
-  const deckrecord = await DeckUser.findOne({ where:{ user_id:req.user.id,deck_id: req.params.deckId}})
+  const deckrecord = await DeckUser.findOne({ where:{ user_id:req.user.id, deck_id: req.params.deckId }})
   if (!deckrecord) throw new UnauthorizedError('Unauthorized');
 
   return next();
 }
 
-const authorizeCollaborator = async(req,res,next) =>{
-  const deck = await Deck.findOne({ where: { id: req.params.deckId }});
+const authorizeCollaborator = async (req, res, next) => {
+  const deck = await Deck.findOne({ where: { deck_id: req.params.deckId }});
   if (!deck) throw new NotFoundError(`Deck with id ${req.params.deckId} is not found.`);
-  const deckrecord = await DeckUser.findOne({ where:{ user_id:req.user.id,deck_id: req.params.deckId, role: { [Op.or]: ['collaborator','owner']}}})
+  const deckrecord = await DeckUser.findOne({ where: { user_id:req.user.id,deck_id: req.params.deckId, role: { [Op.or]: ['collaborator','owner'] } } })
   if (!deckrecord) throw new UnauthorizedError('Unauthorized'); 
 
   return next();
 }
 
 const authorizeOwner = async(req,res,next) =>{
-  const deck = await Deck.findOne({ where: { id: req.params.deckId}});
+  const deck = await Deck.findOne({ where: { deck_id: req.params.deckId } });
   if (!deck) throw new NotFoundError(`Deck with id ${req.params.deckId} is not found.`);
-  const deckrecord = await DeckUser.findOne({ where:{ user_id:req.user.id,deck_id: req.params.deckId, role:'owner'}})
+  const deckrecord = await DeckUser.findOne({ where: { user_id: req.user.id, deck_id: req.params.deckId, role:'owner' } })
   if (!deckrecord) throw new UnauthorizedError('Unauthorized'); 
 
   return next();
 }
-
 
 module.exports = {
   authorizeViewer,
