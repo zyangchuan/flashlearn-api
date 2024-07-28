@@ -1,5 +1,5 @@
 const { Sequelize } = require('../db/sequelize');
-const { NotFoundError } = require('../errors'); 
+const { NotFoundError, BadRequestError } = require('../errors'); 
 const { Friendship, User } = require('../models');
 const { StatusCodes } = require('http-status-codes');
 const { Op } = require('sequelize');
@@ -66,6 +66,9 @@ const getFriends = async (req, res) => {
 
 const sendFriendRequest = async (req, res) => {
   const { friendId } = req.params
+  if (friendId == req.user.id) {
+    throw new BadRequestError('Invalid Request. Friending ownself.');
+  }
   const user = await User.findOne({ where: { id: friendId } });
   if (!user) throw new NotFoundError('User does not exist');
 

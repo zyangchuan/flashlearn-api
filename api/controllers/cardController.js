@@ -35,57 +35,26 @@ const updateAllCards = async (req, res) => {
   const { deckId } = req.params;
   const userId = req.user.id;
 
-  const transaction = await sequelize.transaction();
+  const updatedCards = new Set(
+    (await Card.findAll({
+      where: { deck_id: deckId },
+      attributes: ['id'],
+    })).map(card => card.id)
+  );
 
-  try {
-    const updatedCards = new Set(
-      (await Card.findAll({
-        where: { deck_id: deckId },
-        attributes: ['id'],
-      })).map(card => card.id)
-    );
-
-    const existingFamiliarities = new Set(
-      (await Familiarity.findAll({
-        include: [{
-          model: Card,
-          where: { deck_id: deckId },
-          attributes: [] 
-        }],
-        where: { user_id: userId },
-        attributes: ['card_id'],
-      })).map(familarity => familarity.card_id)
-    );
-
-    const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
-    const deletedCards = [...existingFamiliarities].filter(card => !updatedCards.has(card));
-
-    if (newCards.length > 0) {
-      await Promise.all(newCards.map(async (card) => {
-        await Familiarity.create({
-          user_id: userId,
-          card_id: card
-        }, { transaction });
-      }));
-    }
-    if (deletedCards.length > 0) {
-      await Familiarity.destroy({
-        where: {
-          user_id: userId,
-          card_id: deletedCards
-        }}, { transaction })
-      };
-
-
-
-    await transaction.commit();
-
-    res.status(StatusCodes.OK).json({ updatedCards: Array.from(updatedCards) });
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
+  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
+  
+  if (newCards.length > 0) {
+    await Promise.all(newCards.map(async (card) => {
+      await Familiarity.create({
+        user_id: userId,
+        card_id: card
+      });
+    }));
   }
-};
+
+    res.status(StatusCodes.OK).json({ updatedCards: Array.from(newCards) });
+}
 
 
 

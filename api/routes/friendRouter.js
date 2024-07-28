@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateUser = require('../middlewares/authentication');
-const preventSelfFriendRequest = require('../middlewares/validation')
+
 const {
   searchUsers,
   getFriends,
@@ -18,7 +18,7 @@ router.route('/')
     .get(authenticateUser, getFriends);
 
 router.route('/:friendId')
-  .post(authenticateUser,preventSelfFriendRequest, sendFriendRequest)
+  .post(authenticateUser,sendFriendRequest)
   .delete(authenticateUser, removeFriend);
 
 router.route('/search')

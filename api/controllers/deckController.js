@@ -6,18 +6,18 @@ const sequelize = require('../db/sequelize');
 
 const getOwnDecks = async (req, res) => {
   const decks = await DeckUser.findAll({
-  where: { user_id: req.user.id },
-  order: [['createdAt', 'ASC']],
-  include: {
-  model: Deck,
-  attributes: []
+    where: { user_id: req.user.id },
+    order: [['createdAt', 'ASC']],
+    include: {
+    model: Deck,
+    attributes: []
   },
   attributes: {
-  include: [
-  [sequelize.Sequelize.col('Deck.deck_name'), 'deck_name'],
-  [sequelize.Sequelize.col('Deck.deck_description'), 'deck_description'],
-  [sequelize.Sequelize.col('Deck.public'), 'public']
-  ]
+    include: [
+      [sequelize.Sequelize.col('Deck.deck_name'), 'deck_name'],
+      [sequelize.Sequelize.col('Deck.deck_description'), 'deck_description'],
+      [sequelize.Sequelize.col('Deck.public'), 'public']
+      ]
   },
   });
   
@@ -57,13 +57,10 @@ const addPublicDeck = async(req,res) =>{
     }
   })
   if (!deck) throw new NotFoundError ('Deck does not exist');
-  const DeckUserResult = await DeckUser.findOne({
-    where:{
-      user_id: req.user.id,
-      deck_id: deckId
-    }
+  const deckUserResult = await DeckUser.findOne({
+    where:{ user_id: req.user.id, deck_id: deckId }
   })
-  if (DeckUserResult){
+  if (deckUserResult){
     throw new BadRequestError('Already added')
   }
 
@@ -79,7 +76,7 @@ const addPublicDeck = async(req,res) =>{
 
 const sharePrivateDeck = async(req,res) =>{
   const { role, userId } = req.body, { deckId } = req.params;
-  if (!['collaborator', 'viewer'].includes(role)) throw new BadRequestErrorError('Role must be either "collaborator" or "viewer"');
+  if (!['collaborator', 'viewer'].includes(role)) throw new BadRequestError('Role must be either "collaborator" or "viewer"');
   const deck = await Deck.findOne({
     where:{
       id: deckId
@@ -181,7 +178,7 @@ const toggleDeckPublic = async(req,res) =>{
       id: req.params.deckId
     }
   })
-  if (!deck) throw new NotFoundError('Deck with id ${req.params.deckId} is not found.');
+  if (!deck) throw new NotFoundError(`Deck with id ${req.params.deckId} is not found.`);
 
   deck.public = !deck.public;
   await deck.save();
