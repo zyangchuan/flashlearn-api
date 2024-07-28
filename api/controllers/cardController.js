@@ -42,19 +42,32 @@ const updateAllCards = async (req, res) => {
     })).map(card => card.id)
   );
 
-  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
-  
-  if (newCards.length > 0) {
-    await Promise.all(newCards.map(async (card) => {
-      await Familiarity.create({
-        user_id: userId,
-        card_id: card
-      });
-    }));
-  }
+  const existingFamiliarities = new Set(
+    (await Familiarity.findAll({
+      include: [{
+        model: Card,
+        where: { deck_id: deckId },
+        attributes: [] 
+      }],
+      where: { user_id: userId },
+      attributes: ['card_id'],
+    })).map(familarity => familarity.card_id)
+  );
 
+  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
+
+  if (newCards.length > 0) {
+    const familiarityData = newCards.map(card => ({
+      user_id: userId,
+      card_id: card
+    }));
+  
+    await Familiarity.bulkCreate(familiarityData);
+  }
+  
     res.status(StatusCodes.OK).json({ updatedCards: Array.from(newCards) });
-}
+
+};
 
 
 
