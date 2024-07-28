@@ -5,7 +5,7 @@ const { Deck, Card, Familiarity } = require('../../models');
 
 const createStudyCardSet = async (deckId, userId, cardSetSize) => {
 
-  const deck = await Deck.findOne({ where: { deck_id: deckId } });
+  const deck = await Deck.findOne({ where: { id: deckId } });
   if (!deck) throw new NotFoundError(`Deck with id ${deckId} does not exist.`);
 
   // Clear any existing card sets

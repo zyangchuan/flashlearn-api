@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../db/sequelize');
 
 const Deck = sequelize.define('Deck', {
-  deck_id: {
+  id: {
     type: DataTypes.UUID,
     allowNull: false,
     defaultValue: DataTypes.UUIDV4,
@@ -23,6 +23,7 @@ const Deck = sequelize.define('Deck', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
+    
   }
 });
 
