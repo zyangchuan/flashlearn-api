@@ -3,33 +3,34 @@ const sequelize = require('../db/sequelize');
 const { BadRequestError } = require('../errors');
 const { Familiarity } = require('../models');
 const { StatusCodes } = require('http-status-codes');
-const { createCardSet, getCardSet } = require('../utils')
+const { createStudyCardSet, getStudyCardSet } = require('../utils')
 
-const getCard = async (req, res) => {
+const getStudyCard = async (req, res) => {
   const { id: deckId } = req.params;
   const { id: userId } = req.user;
 
-  const uncompletedSize = await redis.llen(`cardSet:uncompleted:${deckId}:${userId}`);
+  let { uncompletedCards, completedCards, cardSetSize } = await getStudyCardSet(deckId, userId);
 
-  if (!uncompletedSize) {
-    await createCardSet(deckId, userId, 20);
-    // Clear the previous completed card set from redis
-    await redis.del(`cardSet:completed:${deckId}:${userId}`);
+  if (uncompletedCards.length === 0 && completedCards.length === cardSetSize) {
+    await createStudyCardSet(deckId, userId, 20);
+    ({ uncompletedCards, completedCards, cardSetSize } = await getStudyCardSet(deckId, userId));
   }
 
-  const cardSet = await getCardSet(deckId, userId);
-
-  const card = JSON.parse(cardSet.uncompletedCards[0])
-  res.status(StatusCodes.OK).json({ card });
+  res.status(StatusCodes.OK).json({ card: uncompletedCards[0] });
 }
 
-const getCardSetStatus = async (req, res) => {
+const getStudyCardSetProgress = async (req, res) => {
   const { id: deckId } = req.params;
   const { id: userId } = req.user;
 
-  const { completedCards, cardSetSize } = await getCardSet(deckId, userId);
-  const status = { completed: completedCards.length, total: cardSetSize }
-  res.status(StatusCodes.OK).json({ status });
+  let { completedCards, cardSetSize } = await getStudyCardSet(deckId, userId);
+  
+  if (cardSetSize === 0) {
+    await createStudyCardSet(deckId, userId, 20);
+    ({ completedCards, cardSetSize } = await getStudyCardSet(deckId, userId));
+  }
+
+  res.status(StatusCodes.OK).json({ completedCardsCount: completedCards.length, cardSetSize: cardSetSize })
 }
 
 const updateCardSet = async (req, res) => {
@@ -37,7 +38,7 @@ const updateCardSet = async (req, res) => {
   const { id: userId } = req.user;
   const { familiarity } = req.body;
 
-  const { uncompletedCards } = await getCardSet(deckId, userId)
+  const { uncompletedCards } = await getStudyCardSet(deckId, userId)
   
   const card = JSON.parse(uncompletedCards[0]);
   const transaction = await redis.multi();
@@ -51,14 +52,14 @@ const updateCardSet = async (req, res) => {
       // otherwise push it to the 3rd position
       if (uncompletedCards.length < 4) {
         await transaction
-          .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
-          .rpush(`cardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
+          .lpop(`studyCardSet:uncompleted:${deckId}:${userId}`)
+          .rpush(`studyCardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
           .exec();
       } else {
-        await transaction.lpop(`cardSet:uncompleted:${deckId}:${userId}`);
-        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${deckId}:${userId}`, 3, 3);
+        await transaction.lpop(`studyCardSet:uncompleted:${deckId}:${userId}`);
+        const toInsertBefore = await redis.lrange(`studyCardSet:uncompleted:${deckId}:${userId}`, 3, 3);
         await transaction
-          .linsert(`cardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .linsert(`studyCardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
           .exec();
       }
       break;
@@ -71,14 +72,14 @@ const updateCardSet = async (req, res) => {
       // otherwise push it to the 4th position
       if (uncompletedCards.length < 5) {
         await transaction
-          .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
-          .rpush(`cardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
+          .lpop(`studyCardSet:uncompleted:${deckId}:${userId}`)
+          .rpush(`studyCardSet:uncompleted:${deckId}:${userId}`, JSON.stringify(card))
           .exec();
       } else {
-        await transaction.lpop(`cardSet:uncompleted:${deckId}:${userId}`);
-        const toInsertBefore = await redis.lrange(`cardSet:uncompleted:${deckId}:${userId}`, 4, 4);
+        await transaction.lpop(`studyCardSet:uncompleted:${deckId}:${userId}`);
+        const toInsertBefore = await redis.lrange(`studyCardSet:uncompleted:${deckId}:${userId}`, 4, 4);
         await transaction
-          .linsert(`cardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
+          .linsert(`studyCardSet:uncompleted:${deckId}:${userId}`, 'BEFORE', toInsertBefore, JSON.stringify(card))
           .exec();
       }
       
@@ -89,8 +90,8 @@ const updateCardSet = async (req, res) => {
       card.familiarity = Math.min(4, card.familiarity);
       
       await transaction
-        .lpop(`cardSet:uncompleted:${deckId}:${userId}`)
-        .lpush(`cardSet:completed:${deckId}:${userId}`, JSON.stringify(card))
+        .lpop(`studyCardSet:uncompleted:${deckId}:${userId}`)
+        .lpush(`studyCardSet:completed:${deckId}:${userId}`, JSON.stringify(card))
         .exec();
       
       break;
@@ -100,9 +101,9 @@ const updateCardSet = async (req, res) => {
   }
 
   // Update database if the card set has no more cards
-  if (!await redis.llen(`cardSet:uncompleted:${deckId}:${userId}`)) {
+  if (!await redis.llen(`studyCardSet:uncompleted:${deckId}:${userId}`)) {
     const dbtransaction = await sequelize.transaction();
-    const completedCards = await redis.lrange(`cardSet:completed:${deckId}:${userId}`, 0, -1);
+    const completedCards = await redis.lrange(`studyCardSet:completed:${deckId}:${userId}`, 0, -1);
 
     completedCards.forEach(async card => {
       card = JSON.parse(card);
@@ -130,7 +131,7 @@ const updateCardSet = async (req, res) => {
 }
 
 module.exports = {
-  getCard,
-  getCardSetStatus,
+  getStudyCard,
+  getStudyCardSetProgress,
   updateCardSet
 }

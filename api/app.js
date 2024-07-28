@@ -22,18 +22,37 @@ const authRouter = require('./routes/authRouter');
 const deckRouter = require('./routes/deckRouter');
 const cardRouter = require('./routes/cardRouter');
 const studyRouter = require('./routes/studyRouter');
+const blitzRouter = require('./routes/blitzRouter');
 const friendRouter = require('./routes/friendRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);
 app.use('/api/v1/card', cardRouter);
 app.use('/api/v1/study', studyRouter);
+app.use('/api/v1/blitz', blitzRouter);
 app.use('/api/v1/friend', friendRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
+const httpServer = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
+});
+
+// Websockets
+
+const { Server } = require('socket.io');
+const io = new Server(httpServer);
+
+io.engine.use(cookieParser(process.env.JWT_SECRET));
+io.engine.use(helmet());
+io.engine.use(cors());
+io.engine.use(morgan('tiny'))
+io.engine.use(express.json());
+
+const blitzEventHandler = require('./events/blitzEventHandler');
+
+io.on('connection', socket => {
+  blitzEventHandler(io, socket);
 });

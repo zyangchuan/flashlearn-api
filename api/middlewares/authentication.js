@@ -22,7 +22,7 @@ const authenticateUser = async (req, res, next) => {
 
     // Revoke old refresh token in the database
     await token.destroy();
-
+    
     req.user = user;
     return next();
   } else {

@@ -1,9 +1,16 @@
-const redis = require('../db/connectRedis');
-const { Sequelize } = require('../db/sequelize');
-const { BadRequestError } = require('../errors');
-const { Card, Familiarity } = require('../models');
+const redis = require('../../db/connectRedis');
+const { Sequelize } = require('../../db/sequelize');
+const { BadRequestError, NotFoundError } = require('../../errors');
+const { Deck, Card, Familiarity } = require('../../models');
 
-const createCardSet = async (deckId, userId, cardSetSize) => {
+const createStudyCardSet = async (deckId, userId, cardSetSize) => {
+
+  const deck = await Deck.findOne({ where: { id: deckId } });
+  if (!deck) throw new NotFoundError(`Deck with id ${deckId} does not exist.`);
+
+  // Clear any existing card sets
+  await redis.del(`studyCardSet:uncompleted:${deckId}:${userId}`);
+  await redis.del(`studyCardSet:completed:${deckId}:${userId}`);
 
   const CARD_SET_EXPIRY = 1 * 60 * 60 * 24; // Card set expiry
 
@@ -29,11 +36,11 @@ const createCardSet = async (deckId, userId, cardSetSize) => {
   
   const transaction = await redis.multi()
   cards.forEach(async card => await transaction.rpush(
-    `cardSet:uncompleted:${deckId}:${userId}`, 
+    `studyCardSet:uncompleted:${deckId}:${userId}`, 
     JSON.stringify(card)
   ))
   
-  await transaction.expire(`cardSet:uncompleted:${deckId}:${userId}`, CARD_SET_EXPIRY).exec();
+  await transaction.expire(`studyCardSet:uncompleted:${deckId}:${userId}`, CARD_SET_EXPIRY).exec();
 }
 
-module.exports = createCardSet;
+module.exports = createStudyCardSet;
