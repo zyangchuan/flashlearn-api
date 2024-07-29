@@ -163,9 +163,6 @@ const deleteDeck = async (req, res) => {
   if (!deck) throw new NotFoundError(`Deck with id ${deckId} is not found.`);
   await deck.destroy();
 
-  const deckUserResult = await DeckUser.findAll({ where: { deck_id: deckId } });
-  await deckUserResult.destroy();
-
   res.status(StatusCodes.OK).json({ msg: 'Deck deleted successfully.' });
 }
 

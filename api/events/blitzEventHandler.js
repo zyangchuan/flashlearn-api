@@ -1,6 +1,6 @@
 const redis = require('../db/connectRedis');
 
-const blitzEventHandler = async (io, socket) => {
+const blitzEventHandler = async (io, socket, user) => {
   let timeElapsedInSeconds = 0;
   let time = '';
   let timer = null;
@@ -26,8 +26,7 @@ const blitzEventHandler = async (io, socket) => {
 
   const getBlitzCards = async (...args) => {
     const deckId = args[0];
-    const userId = args[1];
-    const cards = await redis.srandmember(`blitzCardSet:${deckId}:${userId}`, 4);
+    const cards = await redis.srandmember(`blitzCardSet:${deckId}:${user.id}`, 4);
 
     let blitzGameCards = [];
     cards.forEach(card => {
@@ -50,23 +49,22 @@ const blitzEventHandler = async (io, socket) => {
 
   const checkAnswer = async (...args) => {
     const deckId = args[0];
-    const userId = args[1];
-    const questionCard = args[2];
-    const answerCard = args[3];
+    const questionCard = args[1];
+    const answerCard = args[2];
     const answer = questionCard.cardId + ':' + questionCard.questionId + ':' + answerCard.answerId;
-    const correct = await redis.sismember(`blitzCardAnswerSet:${deckId}:${userId}`, answer);
+    const correct = await redis.sismember(`blitzCardAnswerSet:${deckId}:${user.id}`, answer);
 
     socket.emit('blitz:checkAnswer', correct);
 
     if (correct) {
       correctCount += 1;
-      await redis.srem(`blitzCardSet:${deckId}:${userId}`, JSON.stringify({ cardId: questionCard.cardId, questionId: questionCard.questionId, question: questionCard.question, answerId: answerCard.answerId, answer: answerCard.answer }));
-      await redis.srem(`blitzCardAnswerSet:${deckId}:${userId}`, answer);
+      await redis.srem(`blitzCardSet:${deckId}:${user.id}`, JSON.stringify({ cardId: questionCard.cardId, questionId: questionCard.questionId, question: questionCard.question, answerId: answerCard.answerId, answer: answerCard.answer }));
+      await redis.srem(`blitzCardAnswerSet:${deckId}:${user.id}`, answer);
 
-      const setSize = await redis.scard(`blitzCardSet:${deckId}:${userId}`);
+      const setSize = await redis.scard(`blitzCardSet:${deckId}:${user.id}`);
       if (!setSize) {
-        await redis.del(`blitzCardSet:${deckId}:${userId}`)
-        await redis.del(`blitzCardAnswerSet:${deckId}:${userId}`)
+        await redis.del(`blitzCardSet:${deckId}:${user.id}`);
+        await redis.del(`blitzCardAnswerSet:${deckId}:${user.id}`);
 
         clearInterval(timer);
         const accuracy = Math.round((correctCount - mistakeCount) / correctCount * 100 * 10) / 10;

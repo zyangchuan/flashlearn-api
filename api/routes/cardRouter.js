@@ -8,7 +8,6 @@ const { checkSchema } = require('express-validator');
 
 const {
   getAllCards,
-  updateFamiliarityData,
   createCard,
   updateCard,
   deleteCard,
@@ -27,8 +26,5 @@ router.route('/:deckId')
 
 router.route('/:deckId/:cardId')
   .delete(authenticateUser, authorizeCollaborator, deleteCard);
-
-router.route('/updateFamiliarity/:deckId')
-  .patch(authenticateUser, authorizeViewer, updateFamiliarityData);
 
 module.exports = router;

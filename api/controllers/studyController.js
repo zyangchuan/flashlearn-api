@@ -6,7 +6,7 @@ const { StatusCodes } = require('http-status-codes');
 const { createStudyCardSet, getStudyCardSet } = require('../utils')
 
 const getStudyCard = async (req, res) => {
-  const { id: deckId } = req.params;
+  const { deckId } = req.params;
   const { id: userId } = req.user;
 
   let { uncompletedCards, completedCards, cardSetSize } = await getStudyCardSet(deckId, userId);
@@ -20,7 +20,7 @@ const getStudyCard = async (req, res) => {
 }
 
 const getStudyCardSetProgress = async (req, res) => {
-  const { id: deckId } = req.params;
+  const { deckId } = req.params;
   const { id: userId } = req.user;
 
   let { completedCards, cardSetSize } = await getStudyCardSet(deckId, userId);
@@ -34,7 +34,7 @@ const getStudyCardSetProgress = async (req, res) => {
 }
 
 const updateCardSet = async (req, res) => {
-  const { id: deckId } = req.params;
+  const { deckId } = req.params;
   const { id: userId } = req.user;
   const { familiarity } = req.body;
 

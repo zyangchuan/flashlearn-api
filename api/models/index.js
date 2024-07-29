@@ -12,18 +12,23 @@ const sequelize = require('../db/sequelize');
 User.hasMany(Token, {
   foreignKey: 'user_id'
 });
+
 User.hasMany(Deck, {
   foreignKey: 'author_user_id'
 });
+
 User.hasMany(DeckUser, {
   foreignKey: 'user_id'
 });
+
 Deck.hasMany(DeckUser,{
   foreignKey:'deck_id'
 });
+
 DeckUser.belongsTo(Deck,{
   foreignKey:'deck_id'
-})
+});
+
 Deck.hasMany(Card, {
   foreignKey: 'deck_id'
 });

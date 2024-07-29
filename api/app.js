@@ -45,7 +45,6 @@ const httpServer = app.listen(port, () => {
 const { Server } = require('socket.io');
 const io = new Server(httpServer);
 
-io.engine.use(cookieParser(process.env.JWT_SECRET));
 io.engine.use(helmet());
 io.engine.use(cors());
 io.engine.use(morgan('tiny'))
@@ -53,6 +52,14 @@ io.engine.use(express.json());
 
 const blitzEventHandler = require('./events/blitzEventHandler');
 
+const cookie = require('cookie');
+const { isTokenValid } = require('./utils');
+
 io.on('connection', socket => {
-  blitzEventHandler(io, socket);
+  const cookies = cookie.parse(socket.handshake.headers.cookie);
+  const { accessToken } = cookieParser.signedCookies(cookies, process.env.JWT_SECRET);
+  const payload = isTokenValid(accessToken);
+  const user = payload.user;
+
+  blitzEventHandler(io, socket, user);
 });

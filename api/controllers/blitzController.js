@@ -8,7 +8,7 @@ const redis = require('../db/connectRedis');
 const GAME_DURATION = 1 * 60 * 60; // 1 min game duration
 
 const createBlitzCards = async (req, res) => {
-  const { id: deckId } = req.params;
+  const { deckId } = req.params;
   const { id: userId } = req.user;
   let blitzCards = await redis.scard(`blitzCardSet:${deckId}:${userId}`);
 

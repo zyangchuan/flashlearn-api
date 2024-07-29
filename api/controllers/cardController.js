@@ -14,43 +14,6 @@ const getAllCards = async (req, res) => {
   res.status(StatusCodes.OK).json({ cards });
 }
 
-const updateFamiliarityData = async (req, res) => { 
-  const { deckId } = req.params;
-  const userId = req.user.id;
-
-  const updatedCards = new Set(
-    (await Card.findAll({
-      where: { deck_id: deckId },
-      attributes: ['id'],
-    })).map(card => card.id)
-  );
-
-  const existingFamiliarities = new Set(
-    (await Familiarity.findAll({
-      include: [{
-        model: Card,
-        where: { deck_id: deckId },
-        attributes: [] 
-      }],
-      where: { user_id: userId },
-      attributes: ['card_id'],
-    })).map(familarity => familarity.card_id)
-  );
-
-  const newCards = [...updatedCards].filter(card => !existingFamiliarities.has(card));
-
-  if (newCards.length > 0) {
-    const familiarityData = newCards.map(card => ({
-      user_id: userId,
-      card_id: card
-    }));
-  
-    await Familiarity.bulkCreate(familiarityData);
-  }
-  
-  res.status(StatusCodes.OK).json({ msg: 'Familiarity data updated' });
-};
-
 const createCard = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -102,7 +65,6 @@ const batchDeleteCards = async (req, res) => {
 
 module.exports = {
   getAllCards,
-  updateFamiliarityData,
   createCard,
   updateCard,
   deleteCard,

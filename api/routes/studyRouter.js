@@ -9,11 +9,11 @@ const {
   updateCardSet
 } = require('../controllers/studyController');
 
-router.route('/:id')
+router.route('/:deckId')
   .get(authenticateUser, getStudyCard)
   .patch(authenticateUser, updateCardSet);
 
-router.route('/progress/:id')
+router.route('/progress/:deckId')
   .get(authenticateUser, getStudyCardSetProgress);
 
 module.exports = router;

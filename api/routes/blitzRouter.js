@@ -7,6 +7,6 @@ const {
   createBlitzCards
 } = require('../controllers/blitzController');
 
-router.route('/:id').get(authenticateUser, createBlitzCards);
+router.route('/:deckId').get(authenticateUser, createBlitzCards);
 
 module.exports = router;

@@ -2,8 +2,11 @@ const redis = require('../../db/connectRedis');
 const { Sequelize } = require('../../db/sequelize');
 const { BadRequestError, NotFoundError } = require('../../errors');
 const { Deck, Card, Familiarity } = require('../../models');
+const updateFamiliartyData = require('./updateFamiliarityData');
 
 const createStudyCardSet = async (deckId, userId, cardSetSize) => {
+  
+  await updateFamiliartyData(deckId, userId);
 
   const deck = await Deck.findOne({ where: { id: deckId } });
   if (!deck) throw new NotFoundError(`Deck with id ${deckId} does not exist.`);
