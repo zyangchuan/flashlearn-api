@@ -22,7 +22,8 @@ const findFriends = async (req, res) => {
           }
         )
       ]
-    }
+    },
+    attributes: ['id', 'email', 'username']
   });
 
   res.status(StatusCodes.OK).json({ users: searchResult });
@@ -59,7 +60,8 @@ const getFriends = async (req, res) => {
   const friends = await User.findAll({
     where: {
       id: friendIds
-    }
+    },
+    attributes: ['id', 'email', 'username']
   });
 
   res.status(StatusCodes.OK).json({ friends });
@@ -95,7 +97,8 @@ const getFriendRequests = async (req, res) => {
   const friendRequests = await User.findAll({
     where: {
       id: requestorIds
-    }
+    },
+    attributes: ['id', 'email', 'username']
   });
 
   res.status(StatusCodes.OK).json({ friendRequests });
