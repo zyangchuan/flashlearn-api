@@ -20,11 +20,39 @@ const findFriends = async (req, res) => {
           {
             [Sequelize.Op.ne]: req.user.username
           }
-        )
-      ]
+        ),
+      ],
+      
     },
-    attributes: ['id', 'email', 'username']
+    attributes: ['id', 'email', 'username'],
+    raw: true
   });
+
+  searchResult.forEach(async (result) => {
+    result.status = 'not_friend'
+    const friendsResult = await Friendship.findOne({
+      where: {
+        [Op.or]: [
+          { requestor: req.user.id, requestee: result.id },
+          { requestor: result.id , requestee: req.user.id }
+        ]
+      }
+    });
+
+    if (friendsResult) {
+      if (friendsResult.accepted) {
+        result.status = 'friend'   
+      } else { 
+
+        if (friendsResult.requestee === req.user.id) {
+          result.status = 'requested'
+        } else {
+          result.status = 'to_respond'
+        }
+      }
+    }
+  })
+  console.log(searchResult)
 
   res.status(StatusCodes.OK).json({ users: searchResult });
 };
