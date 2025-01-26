@@ -35,11 +35,11 @@ const deckDescriptionSchema = {
 
 const cardQuestionSchema = { 
   notEmpty: true,
-  isLength: { options: { max: 200 } }
+  isLength: { options: { max: 100 } }
 }
 
 const cardAnswerSchema = {
-  isLength: { options: { max: 200 } }
+  isLength: { options: { max: 150 } }
 }
 
 module.exports = {
