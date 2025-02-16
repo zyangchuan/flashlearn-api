@@ -61,7 +61,7 @@ jobs:
           port: 22
           envs: AWS_REGION, AWS_ACCOUNT_ID
           script: |
-            cd ./app
+            cd ./app/flashlearn-api
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
             docker compose -f production.yaml down
             docker compose -f production.yaml rm -sf
