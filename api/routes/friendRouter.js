@@ -13,10 +13,10 @@ const {
 } = require('../controllers/friendController');
 
 router.route('/')
-    .get(authenticateUser,getFriends);
+    .get(authenticateUser, getFriends);
 
 router.route('/:friendId')
-  .post(authenticateUser,sendFriendRequest)
+  .post(authenticateUser, sendFriendRequest)
   .delete(authenticateUser, removeFriend);
 
 router.route('/search')

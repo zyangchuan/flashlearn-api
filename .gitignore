@@ -3,3 +3,4 @@
 production.env
 .DS_Store
 flashlearn_ec2_key.pem
+terraform
