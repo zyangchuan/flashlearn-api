@@ -16,7 +16,9 @@ const {
   createDeck,
   updateDeck,
   deleteDeck,
-  toggleDeckPublic
+  toggleDeckPublic,
+  checkRole,
+  deletePublicDeck
 } = require('../controllers/deckController');
 
 router.route('/')
@@ -29,17 +31,21 @@ router.route('/user/:userId')
   .get(authenticateUser,getUserDecks);
 
 router.route('/:deckId')
-  .get(authenticateUser, authorizeViewer, getSingleDeck)
+  .get(authenticateUser, getSingleDeck)
   .patch(authenticateUser, authorizeCollaborator, updateDeck)
   .delete(authenticateUser, authorizeOwner, deleteDeck);
 
 router.route('/publicShare/:deckId')
-  .post(authenticateUser, addPublicDeck);
+  .post(authenticateUser, addPublicDeck)
+  .delete(authenticateUser, deletePublicDeck);
 
 router.route('/privateShare/:deckId')
   .patch(authenticateUser, sharePrivateDeck);
 
 router.route('/toggleDeckPublic/:deckId')
   .patch(authenticateUser, authorizeOwner, toggleDeckPublic);
+
+router.route('/checkRole/:deckId')
+  .get(authenticateUser, checkRole)
 
 module.exports = router;

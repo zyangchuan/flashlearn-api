@@ -15,7 +15,7 @@ const {
 } = require('../controllers/cardController');
 
 router.route('/:deckId')
-  .get(authenticateUser, authorizeViewer, getAllCards)
+  .get(authenticateUser, getAllCards)
   .post(authenticateUser, authorizeCollaborator , checkSchema({
     question: cardQuestionSchema, answer: cardAnswerSchema
   }), createCard)
