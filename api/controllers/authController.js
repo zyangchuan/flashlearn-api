@@ -195,8 +195,14 @@ const googleSignIn = async (req, res) => {
       id: 'google_' + data.id,
       email: data.email,
       username: data.name.slice(0, 19),
+      picture: data.picture,
       verified: true
     });
+  }
+
+  if (!user.picture) {
+    user.picture = data.picture;
+    await user.save();
   }
 
   // Attach access token and refresh token

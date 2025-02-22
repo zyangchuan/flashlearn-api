@@ -18,10 +18,10 @@ const findFriends = async (req, res) => {
           Sequelize.where(
             Sequelize.col('username'),
             { [Sequelize.Op.ne]: req.user.username }
-          ),
+          )
         ],
       },
-      attributes: ['id', 'email', 'username'],
+      attributes: ['id', 'email', 'username', 'picture'],
       raw: true
     });
   }
@@ -40,17 +40,16 @@ const findFriends = async (req, res) => {
     
     if (friendsResult) {
       if (friendsResult.accepted) {
-        result.status = 'friend'   
+        result.status = 'friend';
       } else { 
         if (friendsResult.requestor === req.user.id) {
-          result.status = 'requested'
+          result.status = 'requested';
         } else {
-          result.status = 'to_respond'
+          result.status = 'to_respond';
         }
       }
     }
-
-    return result
+    return result;
   }))
 
   res.status(StatusCodes.OK).json({ users: searchResult });
@@ -86,7 +85,7 @@ const getFriends = async (req, res) => {
 
   const friends = await User.findAll({
     where: { id: friendIds },
-    attributes: ['id', 'email', 'username']
+    attributes: ['id', 'email', 'username', 'picture']
   });
 
   res.status(StatusCodes.OK).json({ friends });

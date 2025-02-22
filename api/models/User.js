@@ -20,6 +20,9 @@ const User = sequelize.define('User', {
   password: {
     type: DataTypes.STRING(80),
   },
+  picture: {
+    type: DataTypes.STRING(200),
+  },
   verification_token: {
     type: DataTypes.CHAR(80),
   },

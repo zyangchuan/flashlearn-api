@@ -38,12 +38,13 @@ const getUserDecks = async (req, res) => {
         public: true
       }
     },
+    raw: true,
     attributes: [
       [sequelize.Sequelize.col('Deck.deck_name'), 'deck_name'],
       [sequelize.Sequelize.col('Deck.deck_description'), 'deck_description'],
       [sequelize.Sequelize.col('Deck.public'), 'public']
     ]
-  })
+  });
 
   res.status(StatusCodes.OK).json({ decks });
 }
@@ -174,7 +175,7 @@ const toggleDeckPublic = async(req,res) =>{
   deck.public = !deck.public;
   await deck.save();
 
-  res.status(StatusCodes.OK).json({ msg: `Deck is now ${deck.public ? 'public' : 'private'}`});
+  res.status(StatusCodes.OK).json({ public: deck.public });
 }
 
 module.exports = {

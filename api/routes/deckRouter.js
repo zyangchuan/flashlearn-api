@@ -40,6 +40,6 @@ router.route('/privateShare/:deckId')
   .patch(authenticateUser, sharePrivateDeck);
 
 router.route('/toggleDeckPublic/:deckId')
-  .post(authenticateUser, authorizeOwner, toggleDeckPublic);
+  .patch(authenticateUser, authorizeOwner, toggleDeckPublic);
 
 module.exports = router;

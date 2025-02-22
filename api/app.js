@@ -24,6 +24,7 @@ const cardRouter = require('./routes/cardRouter');
 const studyRouter = require('./routes/studyRouter');
 const blitzRouter = require('./routes/blitzRouter');
 const friendRouter = require('./routes/friendRouter');
+const profileRouter = require('./routes/profileRouter');
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/deck', deckRouter);
@@ -31,6 +32,7 @@ app.use('/api/v1/card', cardRouter);
 app.use('/api/v1/study', studyRouter);
 app.use('/api/v1/blitz', blitzRouter);
 app.use('/api/v1/friend', friendRouter);
+app.use('/api/v1/profile', profileRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
