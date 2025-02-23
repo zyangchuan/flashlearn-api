@@ -22,7 +22,7 @@ const Deck = sequelize.define('Deck', {
   public:{
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false
+    defaultValue: true
     
   }
 });
