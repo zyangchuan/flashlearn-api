@@ -24,6 +24,9 @@ const createStudyCardSet = async (deckId, userId, cardSetSize) => {
     limit: cardSetSize,
     include: {
       model: Familiarity,
+      where: {
+        user_id: userId
+      },
       attributes: []
     },
     attributes: {
