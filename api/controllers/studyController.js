@@ -93,6 +93,10 @@ const updateCardSet = async (req, res) => {
         .lpop(`studyCardSet:uncompleted:${deckId}:${userId}`)
         .lpush(`studyCardSet:completed:${deckId}:${userId}`, JSON.stringify(card))
         .exec();
+
+      if ((await redis.llen(`studyCardSet:completed:${deckId}:${userId}`) === 1)) {
+        await redis.expire(`studyCardSet:completed:${deckId}:${userId}`, 1 * 60 * 60 * 24);
+      }
       
       break;
     

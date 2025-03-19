@@ -14,8 +14,6 @@ services:
     volumes:
       - ./api:/app
       - /app/node_modules
-    ports:
-      - 5001:5000
     command: ["npm", "run", "dev"]
   db:
     restart: always
