@@ -9,7 +9,7 @@ services:
     env_file:
       - production.env
     build: ./api/
-    command: ["npm", "run", "prod"]
+    command: ["npm", "run", "dev"]
   redis:
     restart: always
     image: redis:latest
@@ -30,9 +30,19 @@ services:
     image: 242201285613.dkr.ecr.ap-southeast-1.amazonaws.com/flashlearn-nginx
     container_name: flashlearn-nginx
     build: ./nginx/
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     ports:
       - 80:80
-    
-volumes:
-  mysql:
-  redis:
+      - 443:443
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    depends_on:
+      - nginx
+    volumes: 
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email flashlearn2025@gmail.com -d flashlearn.io --agree-tos
