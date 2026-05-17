@@ -1,6 +1,15 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
+  vite: {
+    server: {
+      hmr: {
+        protocol: 'ws',
+        port: 24678,
+        clientPort: 24678
+      }
+    }
+  },
   runtimeConfig: {
     public: {
       API_BASE_URL: process.env.API_BASE_URL,

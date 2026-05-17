@@ -96,7 +96,7 @@ const signOut = async () => {
     hover:bg-primary-200 dark:hover:bg-primary-200/[0.2] 
     shadow-sm dark:drop-shadow-none
     rounded-xl 
-    dark-transition;
+    transition ease-out duration-300;
 }
 
 .item-icon {

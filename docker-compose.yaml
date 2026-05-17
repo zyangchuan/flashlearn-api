@@ -10,8 +10,11 @@ services:
       - ./frontend:/app
       - /app/node_modules
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    ports:
+      - 24678:24678
     expose:
       - 3000
+      - 24678
   api:
     restart: always
     depends_on:
