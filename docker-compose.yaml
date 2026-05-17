@@ -3,11 +3,8 @@ services:
     restart: always
     container_name: flashlearn-frontend
     image: flashlearn-frontend:latest
-    environment:
-      API_BASE_URL: ${API_BASE_URL:-http://localhost/api/v1}
-      BASE_URL: ${BASE_URL:-http://localhost}
-      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-http://localhost/api/v1/auth/google}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+    env_file:
+      - .env
     build: ./frontend/
     volumes:
       - ./frontend:/app
