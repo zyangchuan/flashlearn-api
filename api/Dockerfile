@@ -1,4 +1,4 @@
-FROM node:slim
+FROM node:22-slim
 RUN npm install --global nodemon
 WORKDIR /app
 COPY package*.json .
